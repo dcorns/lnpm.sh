@@ -1127,7 +1127,6 @@ getStartsWith(){
 #get major release d
 local pkg=$1
 local vin=$2
-local verstr=0
 local testv=0
 local vpiece=0
 local v1=-1
@@ -1140,7 +1139,7 @@ local remoteAdded=0 #0 means nothing added, 1 means a package was added
         testv=$(getSubRelease ${v1} ${v2} ${v3})
         v3=${testv##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${verstr})
+            remoteAdded=$(remoteInstall ${pkg} ${vin})
             #Use if statement first to keep getSubRelease from false reporting after the package is added
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getSubRelease ${v1} ${v2} ${v3})
@@ -1157,15 +1156,13 @@ local remoteAdded=0 #0 means nothing added, 1 means a package was added
         testv=$(getSubRelease ${v1} ${v2} ${v3})
         v3=${testv##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${verstr})
+            remoteAdded=$(remoteInstall ${pkg} ${vin})
             #Use if statement first to keep getSubRelease from false reporting after the package is added
-            echo this is remote added returned ${remoteAdded}
-            exit 0
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getSubRelease ${v1} ${v2} ${v3})
             fi
         fi
-        #echo ${testv}
+        echo ${testv}
         exit 0
     fi
     #get major release and minor release and patch release d.d.d
@@ -1178,7 +1175,7 @@ local remoteAdded=0 #0 means nothing added, 1 means a package was added
         testv=$(getSubRelease ${v1} ${v2} ${v3})
         v3=${testv##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${verstr})
+            remoteAdded=$(remoteInstall ${pkg} ${vin})
             #Use if statement first to keep getSubRelease from false reporting after the package is added
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getSubRelease ${v1} ${v2} ${v3})
@@ -1187,7 +1184,7 @@ local remoteAdded=0 #0 means nothing added, 1 means a package was added
         echo ${testv}
         exit 0
     fi
-echo ${verstr}
+echo ${testv}
 exit 0
 }
 
@@ -1743,10 +1740,6 @@ case $1 in
     ;;
     'setNodedir')
         setNodeDir
-        exit 0
-    ;;
-    'test')
-        echo $(getStartsWith  $2 $3)
         exit 0
     ;;
     *)
