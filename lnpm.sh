@@ -481,7 +481,7 @@ depstart=false
 devstart=false
 depcount=0
 devcount=0
-echo -e ${green}'Reading package.json'${default}
+#echo -e ${green}'Reading package.json'${default}
     while (( ${#pkgjson[@]} > i )); do
         pkgline=${pkgjson[i++]}
         testforDep=$(echo $pkgline | grep -o 'dependencies')

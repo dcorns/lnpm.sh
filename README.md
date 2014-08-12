@@ -16,18 +16,25 @@ If no reference to the package exists in the dependencies object, it will be add
 If the package does not exist in the local directory, it will be download and assimilated into the local directory and the previous steps will then be carried out.
 Note that if there is more that one version of a package in the local directory, you will be prompted for the one to install.
 
-lnpm.sh install <package_name> -dev
-Performs all the tasks of regular install but also will perform the same steps to add as a dev dependency
-If both dependencies and devDependencies have a reference to the package in package.json it will exit with a package is already installed notification.
+lnpm.sh install [<package_name> [-dev] [-save] [--save-dev]]
 
-lnpm.sh configure
-Makes an existing node_modules directory compatible with lnpm.sh by renaming the directories to include versions
+install - Will install based on existing package json. If no package.json exists it will error out. If the directory from which the command is run has already been installed with npm, you should not use this command. First use 'convert' which will prepare the project for use with lnpm and run the install as well. (currently lnpm install needs to be run twice to complete the process. There is a false error the first time through)
 
-lnpm.sh update <package_name>
-Without a package name this will add the latest version of all packages not already stored in the local folder. If a package name is provided only that package will be affected.
+<package_name> -Installs the package and adds it to package.json as a dependency, creating the package.json interactively first if needed.
+
+<package_name> -save -same as <package_name>
+
+<package_name> -dev -Installs the package and adds it to package.json as a devdependency, creating the package.json interactively first if needed.
+
+<package_name> --save-dev -Installs the package and adds it to package.json as a dependency and devdependency, creating the package.json interactively first if needed.
+
+configure
+Makes an existing node_modules directory compatible with lnpm.sh by renaming the directories to include versions. (<package_name>--<ver>)
+
+update [<package_name>]
+Without a package name this will add the latest version of all packages not already stored in the local folder. If a package name is provided only that package will be affected. Note that with lnpm, packages are not replaced with update. The latest version is only added to the the local folder as an option.
 
 lnpm.sh revert
 Reverts the lmpm modules directory directories to standard node names. Since lnpm allows the centralized storage of multiple package versions by adding the version to the directory name, directories that are part of a multi-version package will remain unaltered. You will need to choose a version and rename the directory manually
 
-lnpm.sh deploy
-Need to implement for copying modules used by project to the project directory, changing directory names back to just the package name and modifying package.json to have the modified path. So the application can be deployed off the local system.
+Note: lnpm.sh does not currently support the installation of multiple packages on the command line
