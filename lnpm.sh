@@ -599,6 +599,8 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
+        echo -e ${blue}602 ${vrs}${default}
+        exit 0
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
@@ -799,6 +801,8 @@ fi
 rgx='^~'
 if [[ ${verstr} =~ $rgx ]]; then
 result=$(reasonablyClose ${pkgin} ${verstr})
+echo -e ${blue}804 ${result}${default}
+        exit 0
 versionLocal=$(isLocal ${pkgin} ${result})
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
@@ -1198,6 +1202,8 @@ local v1out=$1
 local v2out=$2
 local v3out=$3
 for pc in ${currentversions[@]}; do
+echo -e ${blue}1201 ${pc}${default}
+exit 0
     vpiece=$(removeFirstDot ${pc})
     v1=${pc%%'.'*}
     v2=${vpiece%%'.'*}
@@ -1316,6 +1322,8 @@ local v2=-1
 local v3=-1
 #drop the ~
 local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
+echo -e ${blue}1325 ${verin}${default}
+        exit 0
     #get major release x
 local rgx='^[0-9][0-9]*$'
 local testver=""
@@ -1349,10 +1357,15 @@ fi
 rgx='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
 if [[ ${verin} =~ $rgx ]]; then
     vpiece=$(removeFirstDot ${verin})
+    echo -e ${blue}1358 ${vpiece}${default}
+        exit 0
     v1=${verin%%'.'*}
     v2=${vpiece%%'.'*}
     v3=${verin##*'.'}
-    testver=$(getSubRelease ${v1} ${v2} ${v3} )
+    echo -e ${blue}1356 ${v1} ${v2} ${v3}${default}
+    testver=$(getSubRelease ${v1} ${v2} ${v3})
+    echo -e ${blue}1358 ${testver}${default}
+    exit 0
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
         remoteInstall ${pkg} ${verstr}
@@ -1741,6 +1754,10 @@ case $1 in
     ;;
     'setNodedir')
         setNodeDir
+        exit 0
+    ;;
+    'test')
+        echo $(reasonablyClose $2 $3)
         exit 0
     ;;
     *)
