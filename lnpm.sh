@@ -917,7 +917,7 @@ while [ ${count} -lt ${ln} ]; do
     fi
 done
 }
-#take in a number Major, Minor, and Patch numbers and return the that each number or a greater number if found in local
+#take in a number Major, Minor, and Patch numbers and return the that number or a greater number if found in local
 #else return one or more -1's
 getGreatest(){
 local vpiece=""
@@ -947,19 +947,20 @@ for pc in ${currentversions[@]}; do
                 localVerFound=true
         else
             if [ ${v2} -eq ${v2out} ]; then
-                if [ ${v3} -gt ${v3out} ]; then
+                if [ ${v3} -ge ${v3out} ]; then
+                    v2out=${v2}
                     v3out=${v3}
                     localVerFound=true
                 fi
             fi
         fi
-        else
-            if [ ${v2out} -eq ${v2} ] && [ ${v2out} -ne 0 ]; then
-                if [ ${v3} -ge ${v3out} ]; then
-                    v3out=${v3}
-                    localVerFound=true
-                fi
-            fi
+        #else
+            #if [ ${v2out} -eq ${v2} ] && [ ${v2out} -ne 0 ]; then
+                #if [ ${v3} -ge ${v3out} ]; then
+                    #v3out=${v3}
+                    #localVerFound=true
+                #fi
+            #fi
 
         fi
     fi
