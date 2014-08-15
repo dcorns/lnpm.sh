@@ -599,8 +599,7 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
-        echo -e ${blue}602 ${vrs}${default}
-        exit 0
+        echo -e ${blue}602 convert end${default}
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
@@ -608,7 +607,8 @@ convert(){
             local pkln=${#dep}
             local apkln=`expr $pkln - 2`
             local pkgin=`expr substr ${dep} 2 $apkln`
-            writelink ${pkgin} ${vrs}
+        echo -e ${blue}611 convert end${default}
+            #writelink ${pkgin} ${vrs}
             echo -e ${green}"Converted" ${pkgin} ${vrs}${default}
         fi
         let count+=1
@@ -624,7 +624,8 @@ convert(){
             local pkvln=${#dev}
             local apkvln=`expr $pkvln - 2`
             local pkgvin=`expr substr ${dev} 2 $apkvln`
-            writelink ${pkgvin} ${devVrs}
+            echo -e ${blue}629 convert end${default}
+            #writelink ${pkgvin} ${devVrs}
             echo -e ${green}"Converted " ${pkgvin} ${devVrs}${default}
         fi
         let count+=1
@@ -788,6 +789,8 @@ fi
 rgx='^\^'
 if [[ ${verstr} =~ $rgx ]]; then
 result=$(compatibleVersion ${pkgin} ${verstr})
+echo -e ${blue}789 ${result}${default}
+exit
 versionLocal=$(isLocal ${pkgin} ${result})
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
@@ -801,8 +804,6 @@ fi
 rgx='^~'
 if [[ ${verstr} =~ $rgx ]]; then
 result=$(reasonablyClose ${pkgin} ${verstr})
-echo -e ${blue}804 ${result}${default}
-        exit 0
 versionLocal=$(isLocal ${pkgin} ${result})
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
@@ -924,6 +925,7 @@ done
 #take in a number Major, Minor, and Patch numbers and return the that number or a greater number if found in local
 #else return one or more -1's
 getGreatest(){
+echo -e ${blue}925${default}
 local vpiece=""
 local test=""
 local v1=0
@@ -933,11 +935,14 @@ local v1out=$1
 local v2out=$2
 local v3out=$3
 local localVerFound=false
+echo -e ${blue}934 ${v1out}${v2out}${v3out}${default}
+exit 0
 for pc in ${currentversions[@]}; do
     vpiece=$(removeFirstDot ${pc})
     v1=${pc%%'.'*}
     v2=${vpiece%%'.'*}
     v3=${pc##*'.'}
+    echo -e ${blue}939 inside curren versions${default}
     if [ ${v1} -gt ${v1out} ]; then
         v1out=${v1}
         v2out=${v2}
@@ -1202,8 +1207,6 @@ local v1out=$1
 local v2out=$2
 local v3out=$3
 for pc in ${currentversions[@]}; do
-echo -e ${blue}1201 ${pc}${default}
-exit 0
     vpiece=$(removeFirstDot ${pc})
     v1=${pc%%'.'*}
     v2=${vpiece%%'.'*}
@@ -1246,7 +1249,7 @@ if [ ${loc} -lt 1 ]; then
 fi
 echo ${ver}
 }
-
+#A compatible version is anything less that the major release number except in the case of ^0.0.x (refactor later)
 compatibleVersion(){
 local pkg=$1
 local ver=$2
@@ -1266,7 +1269,7 @@ if [[ ${verin} =~ $rgx ]]; then
     testver=$(getGreatest ${v1} ${v2} ${v3})
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${verstr})
+        remoteAdded=$(remoteInstall ${pkg} ${ver})
         #Use if statement first to keep getSubRelease from false reporting after the package is added
         if [ ${remoteAdded} -gt 0 ]; then
             testv=$(getGreatest ${v1} ${v2} ${v3})
@@ -1275,16 +1278,16 @@ if [[ ${verin} =~ $rgx ]]; then
     echo ${testver}
     exit 0
 fi
-#get major release and minor release x.x
+#^1.2.3 := >=1.2.3-0 <2.0.0-0 "Compatible with 1.2.3". When using caret operators, anything from the specified version (including prerelease) will be supported up to, but not including, the next major version (or its prereleases). 1.5.1 will satisfy ^1.2.3, while 1.2.2 and 2.0.0-beta will not.
 rgx='^[0-9][0-9]*\.[0-9][0-9]*$'
 if [[ ${verin} =~ $rgx ]]; then
     v1=${verin%%'.'*}
-    v2=${verin##*'.'}
+    v2=-1
     v3=-1
     testver=$(getGreatest ${v1} ${v2} ${v3})
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${verstr})
+        remoteAdded=$(remoteInstall ${pkg} ${ver})
         #Use if statement first to keep getSubRelease from false reporting after the package is added
         if [ ${remoteAdded} -gt 0 ]; then
             testv=$(getGreatest ${v1} ${v2} ${v3})
@@ -1293,17 +1296,29 @@ if [[ ${verin} =~ $rgx ]]; then
 echo ${testver}
 exit 0
 fi
-#get major release and minor release and patch release x.x.x
+#^0.x.x versions are special: the first non-zero component indicates potentially breaking changes, meaning the caret operator matches any version with the same first non-zero component starting at the specified version.^0.0.2 := =0.0.2 "Only the version 0.0.2 is considered compatible"
 rgx='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
 if [[ ${verin} =~ $rgx ]]; then
     vpiece=$(removeFirstDot ${verin})
     v1=${verin%%'.'*}
-    v2=${vpiece%%'.'*}
-    v3=${verin##*'.'}
+    v2=${vpiece##*'.'}
+    v3=${vpiece%%'.'*}
+    if [ ${v1} -gt 0 ]; then
+        v2=-1
+        v3=-1
+    else
+        if [ ${v2} -gt 0 ]; then
+            v3=-1
+        fi
+    fi
+    echo -e ${blue}1309 ${v1}${v2}${v3}${default}
+    exit 0
     testver=$(getGreatest ${v1} ${v2} ${v3})
+    echo -e ${blue}1312 ${testver}${default}
+    exit 0
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${verstr})
+        remoteAdded=$(remoteInstall ${pkg} ${ver})
         #Use if statement first to keep getSubRelease from false reporting after the package is added
         if [ ${remoteAdded} -gt 0 ]; then
             testv=$(getGreatest ${v1} ${v2} ${v3})
@@ -1322,8 +1337,6 @@ local v2=-1
 local v3=-1
 #drop the ~
 local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
-echo -e ${blue}1325 ${verin}${default}
-        exit 0
     #get major release x
 local rgx='^[0-9][0-9]*$'
 local testver=""
@@ -1353,19 +1366,14 @@ if [[ ${verin} =~ $rgx ]]; then
 echo ${testver}
 exit 0
 fi
-#get major release and minor release and patch release x.x.x
+#~1.2.3 := >=1.2.3-0 <1.3.0-0 "Reasonably close to 1.2.3". When using tilde operators, prerelease versions are supported as well, but a prerelease of the next significant digit will NOT be satisfactory, so 1.3.0-beta will not satisfy ~1.2.3.
 rgx='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
 if [[ ${verin} =~ $rgx ]]; then
     vpiece=$(removeFirstDot ${verin})
-    echo -e ${blue}1358 ${vpiece}${default}
-        exit 0
     v1=${verin%%'.'*}
     v2=${vpiece%%'.'*}
-    v3=${verin##*'.'}
-    echo -e ${blue}1356 ${v1} ${v2} ${v3}${default}
+    v3=-1
     testver=$(getSubRelease ${v1} ${v2} ${v3})
-    echo -e ${blue}1358 ${testver}${default}
-    exit 0
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
         remoteInstall ${pkg} ${verstr}
