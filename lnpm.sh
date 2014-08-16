@@ -599,7 +599,6 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
-        echo -e ${blue}602 convert end${default}
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
@@ -607,8 +606,7 @@ convert(){
             local pkln=${#dep}
             local apkln=`expr $pkln - 2`
             local pkgin=`expr substr ${dep} 2 $apkln`
-        echo -e ${blue}611 convert end${default}
-            #writelink ${pkgin} ${vrs}
+            writelink ${pkgin} ${vrs}
             echo -e ${green}"Converted" ${pkgin} ${vrs}${default}
         fi
         let count+=1
@@ -624,15 +622,14 @@ convert(){
             local pkvln=${#dev}
             local apkvln=`expr $pkvln - 2`
             local pkgvin=`expr substr ${dev} 2 $apkvln`
-            echo -e ${blue}629 convert end${default}
-            #writelink ${pkgvin} ${devVrs}
+            writelink ${pkgvin} ${devVrs}
             echo -e ${green}"Converted " ${pkgvin} ${devVrs}${default}
         fi
         let count+=1
     done
     exit 0
 }
-#currently obsolete
+
 getLatestLocalVer(){
     local latestLocalVer=0.0.0
     setPackageCount ${1}
@@ -789,8 +786,6 @@ fi
 rgx='^\^'
 if [[ ${verstr} =~ $rgx ]]; then
 result=$(compatibleVersion ${pkgin} ${verstr})
-echo -e ${blue}789 ${result}${default}
-exit
 versionLocal=$(isLocal ${pkgin} ${result})
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
@@ -925,7 +920,6 @@ done
 #take in a number Major, Minor, and Patch numbers and return the that number or a greater number if found in local
 #else return one or more -1's
 getGreatest(){
-echo -e ${blue}928${default}
 local vpiece=""
 local test=""
 local v1=0
@@ -935,13 +929,11 @@ local v1out=$1
 local v2out=$2
 local v3out=$3
 local localVerFound=false
-echo -e ${blue}938 ${v1out}${v2out}${v3out}${default}
 for pc in ${currentversions[@]}; do
     vpiece=$(removeFirstDot ${pc})
     v1=${pc%%'.'*}
     v2=${vpiece%%'.'*}
     v3=${pc##*'.'}
-    echo -e ${blue}944 ${v1}${v2}${v3}${default}
     if [ ${v1} -gt ${v1out} ]; then
         v1out=${v1}
         v2out=${v2}
@@ -953,23 +945,15 @@ for pc in ${currentversions[@]}; do
                 v2out=${v2}
                 v3out=${v3}
                 localVerFound=true
-        else
-            if [ ${v2} -eq ${v2out} ]; then
-                if [ ${v3} -ge ${v3out} ]; then
-                    v2out=${v2}
-                    v3out=${v3}
-                    localVerFound=true
+            else
+                if [ ${v2} -eq ${v2out} ]; then
+                    if [ ${v3} -ge ${v3out} ]; then
+                        v2out=${v2}
+                        v3out=${v3}
+                        localVerFound=true
+                    fi
                 fi
             fi
-        fi
-        #else
-            #if [ ${v2out} -eq ${v2} ] && [ ${v2out} -ne 0 ]; then
-                #if [ ${v3} -ge ${v3out} ]; then
-                    #v3out=${v3}
-                    #localVerFound=true
-                #fi
-            #fi
-
         fi
     fi
 done
@@ -1299,9 +1283,9 @@ fi
 rgx='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
 if [[ ${verin} =~ $rgx ]]; then
     vpiece=$(removeFirstDot ${verin})
-    v1=${verin%%'.'*}
-    v2=${vpiece##*'.'}
-    v3=${vpiece%%'.'*}
+        v1=${verin%%'.'*}
+        v2=${vpiece%%'.'*}
+        v3=${verin##*'.'}
     if [ ${v1} -gt 0 ]; then
         v2=-1
         v3=-1
@@ -1310,10 +1294,7 @@ if [[ ${verin} =~ $rgx ]]; then
             v3=-1
         fi
     fi
-    echo -e ${blue}1315 ${v1}${v2}${v3}${default}
     testver=$(getGreatest ${v1} ${v2} ${v3})
-    echo -e ${blue}1317 ${testver}${default}
-    exit 0
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
         remoteAdded=$(remoteInstall ${pkg} ${ver})
