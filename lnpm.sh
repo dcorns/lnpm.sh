@@ -1722,66 +1722,63 @@ fi
 
 #/////////////////////////////////////////////////SCRIPT START//////////////////////////////////////////////////////////
 #validate input
-rchek=$(find ${nd})
-if [ "${rchek}" != "${nd}" ]; then
-    echo -e ${red}"Node modules directory invalid. Set var nd on line 10 to valid path for local node modules"${default}
-    exit 1
-fi
-case $1 in
-    'install')
-        check3
-        install
-        exit 0
-     ;;
-    'update')
-        update
-        exit 0
-    ;;
-    'configure')
-        setupDirs
-        exit 0
-     ;;
-    'revert')
-        echo -e ${yellow}'Reverting local node package directories will break all projects relying on lnpm'${default}
-        echo -e ${yellow}'Make sure to remove the path from each package entry in package.json and run npm install'${default}
-        echo -e ${yellow}'in the projects directory for each lnpm project you wish to make an npm'${default}
-        echo -e ${yellow}'Since lnpm allows you to store multiple package versions by adding the version number to the'${default}
-        echo -e ${yellow}'directory name (normally just package name), this proccess will not alter'${default}
-        echo -e ${yellow}'directory names that are part multi packages you will need to rename the version desired manually'${default}
-        echo -e ${yellow}'Enter yes to continue'${default}
-        read
-        if [ "$REPLY" != 'yes' ]; then
+#rchek=$(find ${nd})
+#if [ "${rchek}" != "${nd}" ]; then
+    #echo -e ${red}"Node modules directory invalid. Set var nd on line 10 to valid path for local node modules"${default}
+    #exit 1
+#else
+    case $1 in
+        'install')
+            check3
+            install
             exit 0
-        fi
-        revertDirs
-        exit 0
-    ;;
-    'prepdeploy')
-        prepDeploy
-        exit 0
-    ;;
-    'convert')
-        echo -e ${yellow}'Enter yes to continue'${default}
-        read
-        if [ "$REPLY" != 'yes' ]; then
+        ;;
+        'update')
+            update
             exit 0
-        fi
-        rm node_modules -R
-        mkdir node_modules
-        convert
-        exit 0
-    ;;
-    'setNodedir')
-        setNodeDir
-        exit 0
-    ;;
-    'test')
-        echo $(reasonablyClose $2 $3)
-        exit 0
-    ;;
-    *)
-        echo -e ${red}'Invalid First Parameter'${default}
-        echo -e ${green}'Valid First Parameters are: install, configure, convert, update, revert and prepdeploy'${default}
-        exit 0
-    ;;
-esac
+        ;;
+        'configure')
+            setupDirs
+            exit 0
+        ;;
+        'revert')
+            echo -e ${yellow}'Reverting local node package directories will break all projects relying on lnpm'${default}
+            echo -e ${yellow}'Make sure to remove the path from each package entry in package.json and run npm  install'${default}
+            echo -e ${yellow}'in the projects directory for each lnpm project you wish to make an npm'${default}
+            echo -e ${yellow}'Since lnpm allows you to store multiple package versions by adding the version number to the'${default}
+            echo -e ${yellow}'directory name (normally just package name), this proccess will not alter'${default}
+            echo -e ${yellow}'directory names that are part multi packages you will need to rename the version desired manually'${default}
+            echo -e ${yellow}'Enter yes to continue'${default}
+            read
+            if [ "$REPLY" != 'yes' ]; then
+                exit 0
+            fi
+            revertDirs
+            exit 0
+        ;;
+        'convert')
+            echo -e ${yellow}'Enter yes to continue'${default}
+            read
+            if [ "$REPLY" != 'yes' ]; then
+                exit 0
+            fi
+            rm node_modules -R
+            mkdir node_modules
+            convert
+            exit 0
+        ;;
+        'setNodedir')
+            setNodeDir
+            exit 0
+        ;;
+        'test')
+            echo $(reasonablyClose $2 $3)
+            exit 0
+        ;;
+        *)
+            echo -e ${red}'Invalid First Parameter'${default}
+            echo -e ${green}'Valid First Parameters are: install, configure, convert, update, revert and prepdeploy'${default}
+            exit 0
+        ;;
+    esac
+#fi
