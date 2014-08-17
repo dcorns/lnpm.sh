@@ -233,7 +233,7 @@ if [ "$devinstall" = "-dev" ] || [ "$devinstall" = "--save-dev" ]; then
     fi
 fi
 
-if [ "$devinstall" = "--save" ] || [ "$devinstall" = "" ]; then
+if [ "$devinstall" = "--save" ] || [ "$devinstall" = "" ] || [ "$devinstall" = "--save-dev" ]; then
     if [ $alreadydep = false ]; then
     echo -e ${green}'adding' $pkginstall 'version' $pkgver "to package.json dependencies"${default}
     addpackageDep
@@ -1216,11 +1216,13 @@ exactVersion(){
 local pkg=$1
 local ver=$2
 local loc=$(isLocal ${pkg} ${ver})
+local remoteAdded=0
 if [ ${loc} -lt 1 ]; then
-    cd ${nd}
-    npm install ${pkg}@${ver}
-    setupDirs
-    cd ${cwd}
+    remoteAdded=$(remoteInstall ${pkg} ${ver})
+    #Use if statement first to keep getSubRelease from false reporting after the package is added
+    if [ ${remoteAdded} -gt 0 ]; then
+        testv=$(isLocal ${pkg} ${ver})
+    fi
 fi
 echo ${ver}
 }
@@ -1660,7 +1662,7 @@ if [ "${nsl}" != "${cwd}/node_modules/${1}" ]; then
     echo -e ${green}Creating symbolic link for ${1}${default}
     ln -s ${nd}/$1"--"$2 ${cwd}/node_modules/$1
 else
-    echo -e ${yellow}Deleting old link for ${1}${default}
+    #remove existing link first
     rm ${cwd}/node_modules/$1
     echo -e ${green}Creating new symbolic link for ${1}${default}
     ln -s ${nd}/$1"--"$2 ${cwd}/node_modules/$1
