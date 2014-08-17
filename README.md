@@ -16,13 +16,13 @@ If no reference to the package exists in the dependencies object, it will be add
 If the package does not exist in the local directory, it will be download and assimilated into the local directory and the previous steps will then be carried out.
 Note that if there is more that one version of a package in the local directory, you will be prompted for the one to install.
 
-lnpm.sh install [<package_name> [-dev] [-save] [--save-dev]]
+lnpm.sh install [<package_name> [-dev] [--save] [--save-dev]]
 
 install - Will install based on existing package json. If no package.json exists it will error out. If the directory from which the command is run has already been installed with npm, you should not use this command. First use 'convert' which will prepare the project for use with lnpm and run the install as well. (currently lnpm install needs to be run twice to complete the process. There is a false error the first time through)
 
 <package_name> -Installs the package and adds it to package.json as a dependency, creating the package.json interactively first if needed.
 
-<package_name> -save -same as <package_name>
+<package_name> --save -same as <package_name>
 
 <package_name> -dev -Installs the package and adds it to package.json as a devdependency, creating the package.json interactively first if needed.
 

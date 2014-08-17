@@ -86,11 +86,6 @@ setupDirs(){
         let preparedcount+=1
     fi
 done
-   # if [ $preparedcount -gt 1 ]; then
-        #echo -e ${green}$preparedcount directories prepared${default}
-   # else
-        #echo -e ${green}$preparedcount directory prepared${default}
-   # fi
 }
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++update+++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -180,9 +175,6 @@ for path in $nd*; do
             fi
         done
         if [ $duprecorded != true ]; then
-                #dupdir=$basedir
-                #basedir=$basedir'--'$vers
-                #echo $basedir
                 dups[dupscount]=$basedir
                 let dupscount=dupscount+1
         fi
@@ -241,7 +233,7 @@ if [ "$devinstall" = "-dev" ] || [ "$devinstall" = "--save-dev" ]; then
     fi
 fi
 
-if [ "$devinstall" = "-save" ] || [ "$devinstall" = "" ]; then
+if [ "$devinstall" = "--save" ] || [ "$devinstall" = "" ]; then
     if [ $alreadydep = false ]; then
     echo -e ${green}'adding' $pkginstall 'version' $pkgver "to package.json dependencies"${default}
     addpackageDep
@@ -256,8 +248,9 @@ check3(){
 case $devinstall in
     '-dev') ;;
     '--save-dev') ;;
+    '--save') ;;
     '') ;;
-    *) echo -e ${red}'The third parameter must be -dev or null'${default}
+    *) echo -e ${red}'The third parameter must be -dev, --save, --save-dev or null'${default}
        exit 0
        ;;
 esac
@@ -296,7 +289,6 @@ if [ "$pkginstall" != "" ]; then
         #If more than one version then manage (pkgexists advances one more before exiting loop)
         if [ $pkgcount -gt 1 ]; then
         echo -e ${green}$pkgcount $pkginstall 'packages found in local directory' $nd${default}
-            echo -e ${blue}'Select Vesion'${default}
             options=${currentversions[@]}
             select s in $options; do
             count=0
@@ -1319,13 +1311,16 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
     #get major release x
 local rgx='^[0-9][0-9]*$'
 local testver=""
+local remoteAdded=0
 if [[ ${verin} =~ $rgx ]]; then
     v1=${verin}
     testver=$(getSubRelease ${v1} ${v2} ${v3} )
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getSubRelease ${v1} ${v2} ${v3} )
+        remoteAdded=$(remoteInstall ${pkg} ${ver})
+        if [ ${remoteAdded} -gt 0 ]; then
+            testv=$(getSubRelease ${v1} ${v2} ${v3})
+        fi
     fi
 echo ${testver}
 exit 0
@@ -1339,8 +1334,10 @@ if [[ ${verin} =~ $rgx ]]; then
     testver=$(getSubRelease ${v1} ${v2} ${v3} )
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getSubRelease ${v1} ${v2} ${v3} )
+        remoteAdded=$(remoteInstall ${pkg} ${ver})
+        if [ ${remoteAdded} -gt 0 ]; then
+            testv=$(getSubRelease ${v1} ${v2} ${v3})
+        fi
     fi
 echo ${testver}
 exit 0
@@ -1355,8 +1352,10 @@ if [[ ${verin} =~ $rgx ]]; then
     testver=$(getSubRelease ${v1} ${v2} ${v3})
     v3=${testver##*'.'}
     if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getSubRelease ${v1} ${v2} ${v3} )
+        remoteAdded=$(remoteInstall ${pkg} ${ver})
+        if [ ${remoteAdded} -gt 0 ]; then
+            testv=$(getSubRelease ${v1} ${v2} ${v3})
+        fi
     fi
 echo ${testver}
 exit 0
@@ -1374,6 +1373,7 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
+local remoteAdded=0
 #get major release x
     rgx='^[0-9][0-9]*$'
     if [[ ${verin} =~ $rgx ]]; then
@@ -1383,8 +1383,10 @@ local testver=-1
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1398,8 +1400,10 @@ local testver=-1
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1414,8 +1418,10 @@ local testver=-1
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1431,6 +1437,7 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
+local remoteAdded=0
 #remove <=
 local verin=`expr substr ${2} 3 $((${#2}-2))`
 #get major release x
@@ -1442,8 +1449,10 @@ local verin=`expr substr ${2} 3 $((${#2}-2))`
         testver=$(getLessOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getLessOrEqual ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getLessOrEqual ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1457,8 +1466,10 @@ local verin=`expr substr ${2} 3 $((${#2}-2))`
         testver=$(getLessOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getLessOrEqual ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getLessOrEqual ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1473,8 +1484,10 @@ local verin=`expr substr ${2} 3 $((${#2}-2))`
         testver=$(getLessOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-        remoteInstall ${pkg} ${verstr}
-        testver=$(getLessOrEqual ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getLessOrEqual ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1490,6 +1503,7 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
+local remoteAdded=0
 #remove <
 local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
     #get major release x
@@ -1501,8 +1515,10 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         testver=$(getLess ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteInstall ${pkg} ${verstr}
-            testver=$(getLess ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getLess ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1516,8 +1532,10 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         testver=$(getLess ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteInstall ${pkg} ${verstr}
-            testver=$(getLess ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getLess ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1532,8 +1550,10 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         testver=$(getLess ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteInstall ${pkg} ${verstr}
-            testver=$(getLess ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getLess ${v1} ${v2} ${v3})
+            fi
         fi
         echo ${testver}
         exit 0
@@ -1549,6 +1569,7 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
+local remoteAdded=0
 #remove >
 local verin=`expr substr ${2} 2 $((${#2}-1))`
     #get major release x
@@ -1560,8 +1581,10 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         testver=$(getGreatest ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteInstall ${pkg} ${verstr}
-            testver=$(getGreatest ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getGreatest ${v1} ${v2} ${v3})
+            fi
         fi
     fi
     #get major release and minor release x.x
@@ -1573,8 +1596,10 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteInstall ${pkg} ${verstr}
-            testver=$(getGreatest ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getGreatest ${v1} ${v2} ${v3})
+            fi
         fi
     fi
     #get major release and minor release and patch release x.x.x
@@ -1587,8 +1612,10 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteInstall ${pkg} ${verstr}
-            testver=$(getGreatest ${v1} ${v2} ${v3} )
+            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            if [ ${remoteAdded} -gt 0 ]; then
+                testv=$(getGreatest ${v1} ${v2} ${v3})
+            fi
         fi
     fi
     if [ ${testver} = ${verin} ]; then
@@ -1695,6 +1722,11 @@ fi
 
 #/////////////////////////////////////////////////SCRIPT START//////////////////////////////////////////////////////////
 #validate input
+rchek=$(find ${nd})
+if [ "${rchek}" != "${nd}" ]; then
+    echo -e ${red}"Node modules directory invalid. Set var nd on line 10 to valid path for local node modules"${default}
+    exit 1
+fi
 case $1 in
     'install')
         check3
