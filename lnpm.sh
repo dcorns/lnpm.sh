@@ -134,7 +134,7 @@ echo -e ${yellow}'update all chosen: This could take a while. To avoid this incl
     else
         echo -e ${yellow}$pkginstall 'module included'${default}
         #verifiy existing package exists, if not offer to install it
-        getPackageCount
+        getPackageCount ${pkginstall}
         if [ ${pkgcount} -lt 1 ]; then
             echo -e ${yellow}'An existing version of' $pkginstall 'was not found, would you like to install it instead? (no to cancel) (yes)'${default}
             read
@@ -212,7 +212,7 @@ exit 0
 install(){
 echo [218] 'install()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 #Check for package locally, else install from repo and setup the directory, else error invalid package
-setpackage
+setpackage ${pkginstall}
 #verify or create package.json file
 checkpackagejson
 #parce package.json and set flags for proccessing
@@ -257,7 +257,7 @@ esac
 }
 #Extract package names versions and paths from local package directory
 splitdirnames(){
-echo [260] 'splitdirnames()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[260] 'splitdirnames()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
     dircount=0
     for path in $nd*; do
     [ -d "${path}" ] || continue # if not a directory, skip
@@ -276,21 +276,22 @@ done
 
 setpackage()
 {
-echo [279] 'setpackage()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
-if [ "$pkginstall" != "" ]; then
+echo -e '\e[1;34m'[279] 'setpackage()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
+local pkgin=${1}
+if [ "$pkgin" != "" ]; then
 #see if the package ($pkginstall) exists in the local directory
     #get local package list set currentpaths and currentversions if at least one package is in the list
-    getPackageCount
+    getPackageCount ${pkgin}
     if [ ${pkgcount} -gt 0 ]; then
         #set package path
         pkgpath=${currentpaths[0]}
         pkgver=${currentversions[0]}
         if [ ${pkgcount} -lt 2 ]; then
-        echo -e ${green}$pkgcount $pkginstall 'package found in local directory' $nd${default}
+        echo [290] 'pkgcount='${pkgcount} 'pkgin='${pkgin} 'founde locally' >> ${cwd}/lnpm.log
         fi
         #If more than one version then manage (pkgexists advances one more before exiting loop)
         if [ $pkgcount -gt 1 ]; then
-        echo -e ${green}$pkgcount $pkginstall 'packages found in local directory' $nd${default}
+        echo [294] 'pkgcount='${pkgcount} 'pkgin='${pkgin} 'founde locally' >> ${cwd}/lnpm.log
             options=${currentversions[@]}
             select s in $options; do
             count=0
@@ -306,22 +307,22 @@ if [ "$pkginstall" != "" ]; then
         fi
 #not in local directory, download it if it exists in npm registry
     else
-        echo -e ${yellow}$pkginstall 'not found in local directory'
-        echo -e ${green}'Installing module from npm external repository'${default}
+        #echo -e ${yellow}$pkgin 'not found in local directory'
+        #echo -e ${green}'Installing module from npm external repository'${default}
         cd $nd
-        npm install $pkginstall
+        npm install $pkgin
         setupDirs
-        getPackageCount
+        getPackageCount ${pkgin}
         if [ $pkgcount -gt 0 ]; then
-            echo -e ${green}$pkginstall 'added to local npm storage'${default}
-            setpackage
+            #echo -e ${green}$pkgin 'added to local npm storage'${default}
+            setpackage ${pkgin}
         else
-            echo -e ${red}$pkginstall 'does not exist in local directory or in npm repository'${default}
+            #echo -e ${red}$pkgin 'does not exist in local directory or in npm repository'${default}
         exit 0
         fi
     fi
 else
-echo -e ${yellow}'No package specified for installation. Installing from package.json'${default}
+#echo -e ${yellow}'No package specified for installation. Installing from package.json'${default}
 convert
 fi
 }
@@ -578,10 +579,11 @@ getPackageCount(){
 #Checks for versions of pkginstall in the local directory and pkgcount+1 for each version found
 #If there is a match, it also sets currentpaths and currentversions arrays to match directories found
     splitdirnames
+    local pkgin=${1}
     pkgidx=0
     pkgcount=0
     for p in ${pkglist[@]}; do
-        if [ ${p} = ${pkginstall} ]; then
+        if [ ${p} = ${pkgin} ]; then
             echo ${p}
             currentpaths[$pkgcount]=${pkgpaths[$pkgidx]}
             currentversions[$pkgcount]=${verlist[$pkgidx]}
@@ -602,7 +604,7 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
-        echo [597] 'exit' ${ver} >> ${cwd}/lnpm.log
+        echo [607] 'vrs='${vrs} >> ${cwd}/lnpm.log
         exit 0
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
@@ -719,7 +721,7 @@ echo ${result}
 }
 
 setPackageCount(){
-echo [715] 'setPackageCount()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[724] 'setPackageCount()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 #Checks for versions of $1 in the local directory and pkgcount+1 for each version found
 #If there is a match, it also sets currentpaths and currentversions arrays to match directories found
     splitdirnames
@@ -736,7 +738,7 @@ echo [715] 'setPackageCount()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 }
 
 setVersion(){
-echo [730] 'serVersion()' ${1} ${2} ${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[741] 'setVersion()' ${1} ${2} ${3}'\e[0m' >> ${cwd}/lnpm.log
 local result=""
 local ln=${#2}
 local pkln=${#1}
@@ -779,6 +781,7 @@ fi
 local rgx='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
 if [[ ${verstr} =~ $rgx ]]; then
     result=$(exactVersion ${pkgin} ${verstr})
+    echo [784] 'result='${result} ''${2} ''${3} >> ${cwd}/lnpm.log
     versionLocal=$(isLocal ${pkgin} ${result})
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
@@ -857,9 +860,11 @@ fi
 #Greater than
 rgx='^>'
 if [[ ${verstr} =~ $rgx ]]; then
+echo [862] 'result='${result} >> ${cwd}/lnpm.log
 result=$(greaterThanVersion ${pkgin} ${verstr})
+echo [864] 'result='${result} >> ${cwd}/lnpm.log
 versionLocal=$(isLocal ${pkgin} ${result})
-echo [856] 'versionLocal='${versionLocal} 'result='${result} 'verstr='${verstr} >> ${cwd}/lnpm.log
+echo [866] 'versionLocal='${versionLocal} 'result='${result} 'verstr='${verstr} >> ${cwd}/lnpm.log
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
         exit 0
@@ -928,7 +933,7 @@ done
 #take in a number Major, Minor, and Patch numbers and return the that number or a greater number if found in local
 #else return one or more -1's
 getGreatest(){
-echo [925] 'getGreatest() 1='${1} '2='${2} '3='${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[935] 'getGreatest() 1='${1} '2='${2} '3='${3}'\e[0m' >> ${cwd}/lnpm.log
 local vpiece=""
 local test=""
 local v1=0
@@ -938,7 +943,7 @@ local v1out=$1
 local v2out=$2
 local v3out=$3
 local localVerFound=false
-echo [935] 'currentversions[@]='${currentversions[@]} >> ${cwd}/lnpm.log
+echo [944] 'currentversions[@]='${currentversions[@]} >> ${cwd}/lnpm.log
 for pc in ${currentversions[@]}; do
 echo [936] 'pc='${pc} >> ${cwd}/lnpm.log
     vpiece=$(removeFirstDot ${pc})
@@ -968,7 +973,7 @@ echo [936] 'pc='${pc} >> ${cwd}/lnpm.log
         fi
     fi
 done
-echo [964] 'localVerFound='${localVerFound} >> ${cwd}/lnpm.log
+echo [974] 'localVerFound='${localVerFound} >> ${cwd}/lnpm.log
 if [ ${localVerFound} = true ]; then
     echo ${v1out}.${v2out}.${v3out}
 else
@@ -1081,6 +1086,7 @@ echo -1.-1.-1
 }
 #Return return version less than input if local
 getLess(){
+echo -e '\e[1;34m'[1089] 'getLess()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local vpiece=""
 local v1=0
 local v2=0
@@ -1130,6 +1136,7 @@ echo -1.-1.-1
 
 getStartsWith(){
 #get major release d
+echo -e '\e[1;34m'[1139] 'getStartsWith'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local pkg=$1
 local vin=$2
 local testv=0
@@ -1137,18 +1144,15 @@ local vpiece=0
 local v1=-1
 local v2=-1
 local v3=-1
-local remoteAdded=0 #0 means nothing added, 1 means a package was added
+local patchver=0
     rgx='^[0-9][0-9]*$'
     if [[ ${vin} =~ $rgx ]]; then
         v1=${vin}
         testv=$(getSubRelease ${v1} ${v2} ${v3})
-        v3=${testv##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${vin})
-            #Use if statement first to keep getSubRelease from false reporting after the package is added
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getSubRelease ${v1} ${v2} ${v3})
-            fi
+        patchver=${testv##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${vin}
+            testv=$(getSubRelease ${v1} ${v2} ${v3})
         fi
         echo ${testv}
         exit 0
@@ -1159,13 +1163,10 @@ local remoteAdded=0 #0 means nothing added, 1 means a package was added
         v1=${vin%%'.'*}
         v2=${vin##*'.'}
         testv=$(getSubRelease ${v1} ${v2} ${v3})
-        v3=${testv##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${vin})
-            #Use if statement first to keep getSubRelease from false reporting after the package is added
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getSubRelease ${v1} ${v2} ${v3})
-            fi
+        patchver=${testv##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${vin}
+            testv=$(getSubRelease ${v1} ${v2} ${v3})
         fi
         echo ${testv}
         exit 0
@@ -1178,13 +1179,10 @@ local remoteAdded=0 #0 means nothing added, 1 means a package was added
         v2=${vpiece%%'.'*}
         v3=${vin##*'.'}
         testv=$(getSubRelease ${v1} ${v2} ${v3})
-        v3=${testv##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${vin})
-            #Use if statement first to keep getSubRelease from false reporting after the package is added
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getSubRelease ${v1} ${v2} ${v3})
-            fi
+        patchver=${testv##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${vin}
+            testv=$(getSubRelease ${v1} ${v2} ${v3})
         fi
         echo ${testv}
         exit 0
@@ -1233,16 +1231,12 @@ echo ${iver}
 }
 
 exactVersion(){
+echo -e '\e[1;34m'[1240] 'exactVersion()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local pkg=$1
 local ver=$2
 local loc=$(isLocal ${pkg} ${ver})
-local remoteAdded=0
 if [ ${loc} -lt 1 ]; then
-    remoteAdded=$(remoteInstall ${pkg} ${ver})
-    #Use if statement first to keep getSubRelease from false reporting after the package is added
-    if [ ${remoteAdded} -gt 0 ]; then
-        testv=$(isLocal ${pkg} ${ver})
-    fi
+    remoteInstall ${pkg} ${ver}
 fi
 echo ${ver}
 }
@@ -1258,19 +1252,16 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=""
-local remoteAdded=0
+local patchver=0
 if [[ ${verin} =~ $rgx ]]; then
     v1=${verin}
     v2=-1
     v3=-1
     testver=$(getGreatest ${v1} ${v2} ${v3})
-    v3=${testver##*'.'}
-    if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${ver})
-        #Use if statement first to keep getSubRelease from false reporting after the package is added
-        if [ ${remoteAdded} -gt 0 ]; then
-            testv=$(getGreatest ${v1} ${v2} ${v3})
-        fi
+    patchver=${testver##*'.'}
+    if [ ${patchver} -eq -1 ]; then
+        remoteInstall ${pkg} ${ver}
+        testver=$(getGreatest ${v1} ${v2} ${v3})
     fi
     echo ${testver}
     exit 0
@@ -1282,13 +1273,10 @@ if [[ ${verin} =~ $rgx ]]; then
     v2=-1
     v3=-1
     testver=$(getGreatest ${v1} ${v2} ${v3})
-    v3=${testver##*'.'}
-    if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${ver})
-        #Use if statement first to keep getSubRelease from false reporting after the package is added
-        if [ ${remoteAdded} -gt 0 ]; then
-            testv=$(getGreatest ${v1} ${v2} ${v3})
-        fi
+    patchver=${testver##*'.'}
+    if [ ${patchver} -eq -1 ]; then
+        remoteInstall ${pkg} ${ver}
+        testver=$(getGreatest ${v1} ${v2} ${v3})
     fi
 echo ${testver}
 exit 0
@@ -1309,13 +1297,10 @@ if [[ ${verin} =~ $rgx ]]; then
         fi
     fi
     testver=$(getGreatest ${v1} ${v2} ${v3})
-    v3=${testver##*'.'}
-    if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${ver})
-        #Use if statement first to keep getSubRelease from false reporting after the package is added
-        if [ ${remoteAdded} -gt 0 ]; then
-            testv=$(getGreatest ${v1} ${v2} ${v3})
-        fi
+    patchver=${testver##*'.'}
+    if [ ${patchver} -eq -1 ]; then
+        remoteInstall ${pkg} ${ver}
+        testver=$(getGreatest ${v1} ${v2} ${v3})
     fi
 echo ${testver}
 exit 0
@@ -1323,6 +1308,7 @@ fi
 }
 
 reasonablyClose(){
+echo -e '\e[1;34m'[1319] 'reasonablyClose()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local pkg=$1
 local verstr=$2
 local v1=-1
@@ -1333,16 +1319,14 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
     #get major release x
 local rgx='^[0-9][0-9]*$'
 local testver=""
-local remoteAdded=0
+local patchver=0
 if [[ ${verin} =~ $rgx ]]; then
     v1=${verin}
     testver=$(getSubRelease ${v1} ${v2} ${v3} )
-    v3=${testver##*'.'}
-    if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${ver})
-        if [ ${remoteAdded} -gt 0 ]; then
-            testv=$(getSubRelease ${v1} ${v2} ${v3})
-        fi
+    patchver=${testver##*'.'}
+    if [ ${patchver} -eq -1 ]; then
+        remoteInstall ${pkg} ${verstr}
+        testver=$(getSubRelease ${v1} ${v2} ${v3})
     fi
 echo ${testver}
 exit 0
@@ -1354,12 +1338,10 @@ if [[ ${verin} =~ $rgx ]]; then
     v2=${verin##*'.'}
     v3=-1
     testver=$(getSubRelease ${v1} ${v2} ${v3} )
-    v3=${testver##*'.'}
-    if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${ver})
-        if [ ${remoteAdded} -gt 0 ]; then
-            testv=$(getSubRelease ${v1} ${v2} ${v3})
-        fi
+    patchver=${testver##*'.'}
+    if [ ${patchver} -eq -1 ]; then
+        remoteInstall ${pkg} ${verstr}
+        testver=$(getSubRelease ${v1} ${v2} ${v3})
     fi
 echo ${testver}
 exit 0
@@ -1372,12 +1354,10 @@ if [[ ${verin} =~ $rgx ]]; then
     v2=${vpiece%%'.'*}
     v3=-1
     testver=$(getSubRelease ${v1} ${v2} ${v3})
-    v3=${testver##*'.'}
-    if [ ${v3} -eq -1 ]; then
-        remoteAdded=$(remoteInstall ${pkg} ${ver})
-        if [ ${remoteAdded} -gt 0 ]; then
-            testv=$(getSubRelease ${v1} ${v2} ${v3})
-        fi
+    patchver=${testver##*'.'}
+    if [ ${patchver} -eq -1 ]; then
+        remoteInstall ${pkg} ${verstr}
+        testver=$(getSubRelease ${v1} ${v2} ${v3})
     fi
 echo ${testver}
 exit 0
@@ -1395,7 +1375,7 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
-local remoteAdded=0
+local patchver=0
 #get major release x
     rgx='^[0-9][0-9]*$'
     if [[ ${verin} =~ $rgx ]]; then
@@ -1403,12 +1383,10 @@ local remoteAdded=0
         v2=-1
         v3=-1
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${ver}
+            testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1420,12 +1398,10 @@ local remoteAdded=0
         v2=${verin##*'.'}
         v3=-1
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${ver}
+            testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1438,12 +1414,10 @@ local remoteAdded=0
         v2=${vpiece%%'.'*}
         v3=${verin##*'.'}
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${ver}
+            testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1453,15 +1427,16 @@ exit 0
 }
 
 lessThanEqual(){
+echo -e '\e[1;34m'[1452] 'lessThanEqual()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local pkg=$1
 local verstr=$2
 local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
-local remoteAdded=0
+local patchver=0
 #remove <=
-local verin=`expr substr ${2} 3 $((${#2}-2))`
+local verin=`expr substr ${verstr} 3 $((${#verstr}-2))`
 #get major release x
     rgx='^[0-9][0-9]*$'
     if [[ ${verin} =~ $rgx ]]; then
@@ -1469,12 +1444,10 @@ local verin=`expr substr ${2} 3 $((${#2}-2))`
         v2=-1
         v3=-1
         testver=$(getLessOrEqual ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getLessOrEqual ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getLessOrEqual ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1486,12 +1459,10 @@ local verin=`expr substr ${2} 3 $((${#2}-2))`
         v2=${verin##*'.'}
         v3=-1
         testver=$(getLessOrEqual ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getLessOrEqual ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getLessOrEqual ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1504,12 +1475,10 @@ local verin=`expr substr ${2} 3 $((${#2}-2))`
         v2=${vpiece%%'.'*}
         v3=${verin##*'.'}
         testver=$(getLessOrEqual ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getLessOrEqual ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getLessOrEqual ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1525,7 +1494,7 @@ local v1=-1
 local v2=-1
 local v3=-1
 local testver=-1
-local remoteAdded=0
+local patchver=0
 #remove <
 local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
     #get major release x
@@ -1535,12 +1504,10 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         v2=-1
         v3=-1
         testver=$(getLess ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getLess ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getLess ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1552,12 +1519,10 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         v2=${verin##*'.'}
         v3=-1
         testver=$(getLess ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getLess ${v1} ${v2} ${v3})
-            fi
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getLess ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1570,12 +1535,11 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         v2=${vpiece%%'.'*}
         v3=${verin##*'.'}
         testver=$(getLess ${v1} ${v2} ${v3})
-        v3=${testver##*'.'}
-        if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getLess ${v1} ${v2} ${v3})
-            fi
+        echo [1570] 'testver='${testver} >> ${cwd}/lnpm.log
+        patchver=${testver##*'.'}
+        if [ ${patchver} -eq -1 ]; then
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getLess ${v1} ${v2} ${v3})
         fi
         echo ${testver}
         exit 0
@@ -1585,7 +1549,7 @@ exit 0
 }
 
 greaterThanVersion(){
-echo [1593] 'greaterThanVersion()' ${1} ${2} ${3} >> ${cwd}/lnpm.log
+echo -e ${blue}[1593] 'greaterThanVersion()' ${1} ${2} ${3}${default} >> ${cwd}/lnpm.log
 local pkg=$1
 local verstr=$2
 local v1=-1
@@ -1603,13 +1567,10 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         v3=-1
         testver=$(getGreatest ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
-        echo [1611] 'testver='${testver} >> ${cwd}/lnpm.log
+        echo [1609] 'testver='${testver} >> ${cwd}/lnpm.log
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${verstr})
-            echo [1599] 'remoteAdded='${remoteAdded} >> ${cwd}/lnpm.log
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getGreatest ${v1} ${v2} ${v3})
-            fi
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getGreatest ${v1} ${v2} ${v3})
         fi
     fi
     #get major release and minor release x.x
@@ -1618,13 +1579,11 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         v1=${verin%%'.'*}
         v2=${verin##*'.'}
         v3=-1
-        testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
+        testver=$(getGreatest ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${verstr})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getGreatest ${v1} ${v2} ${v3})
-            fi
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getGreatest ${v1} ${v2} ${v3})
         fi
     fi
     #get major release and minor release and patch release x.x.x
@@ -1634,21 +1593,20 @@ local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
         v1=${verin%%'.'*}
         v2=${vpiece%%'.'*}
         v3=${verin##*'.'}
-        testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
+        testver=$(getGreatest ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${verstr})
-            if [ ${remoteAdded} -gt 0 ]; then
-                testv=$(getGreatest ${v1} ${v2} ${v3})
-            fi
+            remoteInstall ${pkg} ${verstr}
+            testver=$(getGreatest ${v1} ${v2} ${v3})
         fi
     fi
+    echo [1643] 'testver='${testver} 'verin='${verin} >> ${cwd}/lnpm.log
     if [ ${testver} = ${verin} ]; then
         echo ${2}
     else
+    echo [1647] 'testver='${testver} >> ${cwd}/lnpm.log
         echo ${testver}
     fi
-exit 0
 }
 
 anySubVersionX(){
@@ -1693,7 +1651,7 @@ fi
 }
 
 isLocal(){
-echo [1688] 'isLocal() pkg='${1} 'ver='${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[1697] 'isLocal() pkg='${1} 'ver='${2} ''${3} >> ${cwd}/lnpm.log
 splitdirnames
 local count=0
 local pkg=$1
@@ -1714,25 +1672,12 @@ remoteInstall(){
 echo [1702] 'remoteInstall() pkg='${1} 'ver='${2} ''${3} >> ${cwd}/lnpm.log
 local pkg=$1
 local ver=$2
-local testcount=0
-setPackageCount ${pkg}
-#put current package count in testcount
-testcount=$((testcount+=$pkgcount))
-echo [1709] 'testcount='${testcount} 'pkgcount='${pkgcount} >> ${cwd}/lnpm.log
 cd ${nd}
 #direct output of npm install to variable to keep it from being returned with echo from this function
 local npmoutput=$(npm install ${pkg}@${ver})
 setupDirs
-#set the package count again
 setPackageCount ${pkg}
 cd ${cwd}
-#if the package was added successfully return 1 else return a 0
-echo [1719] 'pkgcount='${pkgcount} 'testcount'${testcount} ''${3} >> ${cwd}/lnpm.log
-if [ ${pkgcount} -gt ${testcount} ]; then
-    echo 1
-else
-    echo 0
-fi
 }
 
 setNodeDir(){
