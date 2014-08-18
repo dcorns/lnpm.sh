@@ -4,7 +4,7 @@ An npm for local storage use and managment
 
 This script solves the problem of having node_modules installed in every directory in which you have a node project. It allows node modules to be read from a centralized directory on the file system and when a particular package does not exist it will download the package to the centralized directory for continued use. No more downloading packages every time you start a new node project and no longer do node packages have to be spread out all over your hard drive. Every version of a package in use conveniently stored in one place.
 
-BEFORE USING lnpm.sh YOU MUST CHANGE THE nd VARIABLE LINE 6 OF THE SCRIPT TO POINT TO THE FULL PATH OF THE DIRECTORY YOU WILL USE TO STORE THE NODE PACKAGES
+BEFORE USING lnpm.sh YOU MUST ADD THE FOLLOWING STATEMENT TO ~/.bashrc: export LNPMDIR=<THE FULL PATH OF THE LOCAL DIRECTORY YOU WILL USE TO STORE THE NODE PACKAGES>
 
 After that is done, the easiest way to get started is to copy and existing node_modules directory from one of your existing projects to where you want your centralized location. Then run lnpm configure. This will change all the directory names to <packagename>---<version>. This makes the packages usable with lnpm and your ready to go. You could simply create an empty directory and assign it to nd, but this way will save you some downloading which is one of the main reasons to use this script. You can easily add other packages to the nd directory at anytime and run lnpm configure again to setup the new directories.
 

@@ -7,7 +7,8 @@
 clear
 #*******************************************Variables*******************************************************************
 #set the local node modules directory here
-nd='/data/Projects/node_modules/'
+nd=$(echo $LNPMDIR)
+#nd='/data/Projects/node_modules/'
 #define colors
 red='\e[0;31m'
 green='\e[0;32m'
@@ -591,6 +592,8 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
+        echo -e ${blue}594 v=${vrs}${default}
+        exit 0
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
@@ -843,7 +846,9 @@ fi
 rgx='^>'
 if [[ ${verstr} =~ $rgx ]]; then
 result=$(greaterThanVersion ${pkgin} ${verstr})
+echo -e ${blue}848 r=${result}${default}
 versionLocal=$(isLocal ${pkgin} ${result})
+echo -e ${blue}850 vl=${versionLocal}${default}
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
         exit 0
@@ -1582,8 +1587,11 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         v3=-1
         testver=$(getGreatest ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
+        echo -e ${blue}[1589] tv=${testver}${default}
         if [ ${v3} -eq -1 ]; then
             remoteAdded=$(remoteInstall ${pkg} ${ver})
+            echo -e ${blue}[1592] ra=${remoteAdded}${default}
+            exit 0
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getGreatest ${v1} ${v2} ${v3})
             fi
@@ -1694,6 +1702,8 @@ local testcount=0
 setPackageCount ${pkg}
 #put current package count in testcount
 testcount=$((testcount+=$pkgcount))
+echo -e ${blue}1702  ${ver}${default}
+exit 0
 cd ${nd}
 npm install ${pkg}@${ver}
 setupDirs
@@ -1701,6 +1711,8 @@ setupDirs
 setPackageCount ${pkg}
 cd ${cwd}
 #if the package was added successfully return 1 else return a 0
+echo -e ${blue}1709 pc=${pkgcount} tc=${testcount}${default}
+exit 0
 if [ ${pkgcount} -gt ${testcount} ]; then
     echo 1
 else
