@@ -3,7 +3,8 @@
 #https://github.com/dcorns  www.linkedin.com/in/dalecorns/
 #GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 #Please report any bugs https://github.com/dcorns/bash_scripts/issues
-
+echo lnpm started > lnpm.log
+date >> lnpm.log
 clear
 #*******************************************Variables*******************************************************************
 #set the local node modules directory here
@@ -44,6 +45,7 @@ pkgcount=0
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++setupDirs++++++++++++++++++++++++++++++++++++++++++++++
 #Configure existing directory that already contains normal node modules to work with lnpm
 setupDirs(){
+echo [48] 'setupDirs()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 #Rename each directory with a 0-0-0 extention for version identification
     #Proccess directories
     preparedcount=0
@@ -153,6 +155,7 @@ echo -e ${yellow}'update all chosen: This could take a while. To avoid this incl
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++revertDirs+++++++++++++++++++++++++++++++++++++++++++++++++++
 #revert the local folder or some other folder to standard package names
 revertDirs(){
+echo [158] 'revertDirs()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 cd $nd
 
 dircount=0
@@ -204,15 +207,10 @@ done
 exit 0
 }
 
-#+++++++++++++++++++++++++++++++++++++++++++++++preDeploy+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#copy packages to project directory revert directory names and update package.json for deployment
-prepDeploy(){
-echo 'preDeploy'
-}
-
 #++++++++++++++++++++++++++++++++++++++++++++++++++++install++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #*************************************lnpm install code*****************************************************************
 install(){
+echo [218] 'install()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 #Check for package locally, else install from repo and setup the directory, else error invalid package
 setpackage
 #verify or create package.json file
@@ -244,8 +242,9 @@ echo -e ${green}'Installation complete'${default}
 }
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++check3++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#validate the third parameter
+#validate the third parameter devinstall
 check3(){
+echo [247] 'check3() devinstall='${devinstall} >> ${cwd}/lnpm.log
 case $devinstall in
     '-dev') ;;
     '--save-dev') ;;
@@ -258,6 +257,7 @@ esac
 }
 #Extract package names versions and paths from local package directory
 splitdirnames(){
+echo [260] 'splitdirnames()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
     dircount=0
     for path in $nd*; do
     [ -d "${path}" ] || continue # if not a directory, skip
@@ -276,6 +276,7 @@ done
 
 setpackage()
 {
+echo [279] 'setpackage()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 if [ "$pkginstall" != "" ]; then
 #see if the package ($pkginstall) exists in the local directory
     #get local package list set currentpaths and currentversions if at least one package is in the list
@@ -329,6 +330,7 @@ fi
 checkpackagejson()
 {
 #check for package.json and npm init if it does not exist
+echo [338] 'checkpackagejson()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 cd $cwd
 pkg=$(find package.json)
 if [ "$pkg" = 'package.json' ]; then
@@ -339,6 +341,7 @@ fi
 }
 #Check for package in dependencies
 checkpackageDep(){
+echo [349] 'checkpackageDep()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 if [ $localpackageadded = true ]; then
         echo "New package added, bypass package.json dependencies check"
     else
@@ -359,6 +362,7 @@ if [ $localpackageadded = true ]; then
 }
 #Check for package in devdependencies
 checkpackageDev(){
+echo [370] 'checkpackageDev()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 if [ $localpackageadded = true ]; then
         echo "New package added, bypass package.json devdependencies check"
     else
@@ -379,6 +383,7 @@ if [ $localpackageadded = true ]; then
 }
 addpackageDep(){
 #extract package.json lines to array
+echo [391] 'addpackageDep()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 cd $cwd
 #make temp package.json file
@@ -419,6 +424,7 @@ echo -e ${green}$pkginstall $pkgver 'added to package.json dependencies'${defaul
 
 addpackageDev(){
 #extract package.json lines to array
+echo [431] 'addpackageDev()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 cd $cwd
 #make temp package.json file
@@ -468,6 +474,7 @@ mv package.njson package.json
 #requires pkgjson
 parcepkgjson(){
 #extract package.json lines to array and other stuff that isn't really needed
+echo [478] 'parcepkgjson()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 count=1
 depstart=false
@@ -515,6 +522,7 @@ devcount=0
 
 #requires depobj, hasdependencies
 makeDepList(){
+echo [526] 'makeDepList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
     if [ $havedependencies = true ]; then
         echo -e ${green}'building deplist'${default}
         depobjlength=${#depobj[@]}
@@ -542,6 +550,7 @@ makeDepList(){
 
 #requires devobj, hasdevdependencies
 makeDevList(){
+echo [554] 'makeDevList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
     if [ $havedevdependencies = true ]; then
         echo -e ${green}'building devlist'${default}
         devobjlength=${#devobj[@]}
@@ -583,6 +592,7 @@ getPackageCount(){
 }
 
 convert(){
+    echo [587] 'convert()' ${1} >> ${cwd}/lnpm.log
     parcepkgjson
     makeDepList
     makeDevList
@@ -592,7 +602,7 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
-        echo -e ${blue}594 v=${vrs}${default}
+        echo [597] 'exit' ${ver} >> ${cwd}/lnpm.log
         exit 0
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
@@ -709,6 +719,7 @@ echo ${result}
 }
 
 setPackageCount(){
+echo [715] 'setPackageCount()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 #Checks for versions of $1 in the local directory and pkgcount+1 for each version found
 #If there is a match, it also sets currentpaths and currentversions arrays to match directories found
     splitdirnames
@@ -725,6 +736,7 @@ setPackageCount(){
 }
 
 setVersion(){
+echo [730] 'serVersion()' ${1} ${2} ${3} >> ${cwd}/lnpm.log
 local result=""
 local ln=${#2}
 local pkln=${#1}
@@ -846,9 +858,8 @@ fi
 rgx='^>'
 if [[ ${verstr} =~ $rgx ]]; then
 result=$(greaterThanVersion ${pkgin} ${verstr})
-echo -e ${blue}848 r=${result}${default}
 versionLocal=$(isLocal ${pkgin} ${result})
-echo -e ${blue}850 vl=${versionLocal}${default}
+echo [856] 'versionLocal='${versionLocal} 'result='${result} 'verstr='${verstr} >> ${cwd}/lnpm.log
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
         exit 0
@@ -917,6 +928,7 @@ done
 #take in a number Major, Minor, and Patch numbers and return the that number or a greater number if found in local
 #else return one or more -1's
 getGreatest(){
+echo [925] 'getGreatest() 1='${1} '2='${2} '3='${3} >> ${cwd}/lnpm.log
 local vpiece=""
 local test=""
 local v1=0
@@ -926,7 +938,9 @@ local v1out=$1
 local v2out=$2
 local v3out=$3
 local localVerFound=false
+echo [935] 'currentversions[@]='${currentversions[@]} >> ${cwd}/lnpm.log
 for pc in ${currentversions[@]}; do
+echo [936] 'pc='${pc} >> ${cwd}/lnpm.log
     vpiece=$(removeFirstDot ${pc})
     v1=${pc%%'.'*}
     v2=${vpiece%%'.'*}
@@ -954,6 +968,7 @@ for pc in ${currentversions[@]}; do
         fi
     fi
 done
+echo [964] 'localVerFound='${localVerFound} >> ${cwd}/lnpm.log
 if [ ${localVerFound} = true ]; then
     echo ${v1out}.${v2out}.${v3out}
 else
@@ -1570,6 +1585,7 @@ exit 0
 }
 
 greaterThanVersion(){
+echo [1593] 'greaterThanVersion()' ${1} ${2} ${3} >> ${cwd}/lnpm.log
 local pkg=$1
 local verstr=$2
 local v1=-1
@@ -1578,7 +1594,7 @@ local v3=-1
 local testver=-1
 local remoteAdded=0
 #remove >
-local verin=`expr substr ${2} 2 $((${#2}-1))`
+local verin=`expr substr ${verstr} 2 $((${#verstr}-1))`
     #get major release x
     rgx='^[0-9][0-9]*$'
     if [[ ${verin} =~ $rgx ]]; then
@@ -1587,11 +1603,10 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         v3=-1
         testver=$(getGreatest ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
-        echo -e ${blue}[1589] tv=${testver}${default}
+        echo [1611] 'testver='${testver} >> ${cwd}/lnpm.log
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
-            echo -e ${blue}[1592] ra=${remoteAdded}${default}
-            exit 0
+            remoteAdded=$(remoteInstall ${pkg} ${verstr})
+            echo [1599] 'remoteAdded='${remoteAdded} >> ${cwd}/lnpm.log
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getGreatest ${v1} ${v2} ${v3})
             fi
@@ -1606,7 +1621,7 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            remoteAdded=$(remoteInstall ${pkg} ${verstr})
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getGreatest ${v1} ${v2} ${v3})
             fi
@@ -1622,7 +1637,7 @@ local verin=`expr substr ${2} 2 $((${#2}-1))`
         testver=$(getMajorGreatestOrEqual ${v1} ${v2} ${v3})
         v3=${testver##*'.'}
         if [ ${v3} -eq -1 ]; then
-            remoteAdded=$(remoteInstall ${pkg} ${ver})
+            remoteAdded=$(remoteInstall ${pkg} ${verstr})
             if [ ${remoteAdded} -gt 0 ]; then
                 testv=$(getGreatest ${v1} ${v2} ${v3})
             fi
@@ -1678,13 +1693,14 @@ fi
 }
 
 isLocal(){
+echo [1688] 'isLocal() pkg='${1} 'ver='${2} ''${3} >> ${cwd}/lnpm.log
 splitdirnames
 local count=0
 local pkg=$1
 local ver=$2
 for pk in ${pkglist[@]}; do
-    if [ ${pk} = ${pkg} ]; then
-        if [ ${verlist[${count}]} = ${ver} ]; then
+    if [ "${pk}" = "${pkg}" ]; then
+        if [ "${verlist[${count}]}" = "${ver}" ]; then
             echo 1
             exit 0
         fi
@@ -1695,24 +1711,23 @@ echo 0
 }
 
 remoteInstall(){
-#repositories do not always follow semversioning rules (vows returns 0.7.0 for 0.6.x; should be only starts with 0.6.)
+echo [1702] 'remoteInstall() pkg='${1} 'ver='${2} ''${3} >> ${cwd}/lnpm.log
 local pkg=$1
 local ver=$2
 local testcount=0
 setPackageCount ${pkg}
 #put current package count in testcount
 testcount=$((testcount+=$pkgcount))
-echo -e ${blue}1702  ${ver}${default}
-exit 0
+echo [1709] 'testcount='${testcount} 'pkgcount='${pkgcount} >> ${cwd}/lnpm.log
 cd ${nd}
-npm install ${pkg}@${ver}
+#direct output of npm install to variable to keep it from being returned with echo from this function
+local npmoutput=$(npm install ${pkg}@${ver})
 setupDirs
 #set the package count again
 setPackageCount ${pkg}
 cd ${cwd}
 #if the package was added successfully return 1 else return a 0
-echo -e ${blue}1709 pc=${pkgcount} tc=${testcount}${default}
-exit 0
+echo [1719] 'pkgcount='${pkgcount} 'testcount'${testcount} ''${3} >> ${cwd}/lnpm.log
 if [ ${pkgcount} -gt ${testcount} ]; then
     echo 1
 else
@@ -1741,6 +1756,7 @@ fi
     #echo -e ${red}"Node modules directory invalid. Set var nd on line 10 to valid path for local node modules"${default}
     #exit 1
 #else
+echo [1753] 'Start Switch 1='${1} '2='${2} '3='${3} >> ${cwd}/lnpm.log
     case $1 in
         'install')
             check3
