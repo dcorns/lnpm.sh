@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #Created by Dale Corns codefellow@gmail.com Copyright (c)2014 Dale Corns
 #https://github.com/dcorns  www.linkedin.com/in/dalecorns/
 #GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
@@ -7,7 +7,7 @@ echo lnpm started > lnpm.log
 date >> lnpm.log
 clear
 #*******************************************Variables*******************************************************************
-#set the local node modules directory here
+#set the local node modules directory here/usr/bin/env
 nd=$(echo $LNPMDIR)
 #nd='/data/Projects/node_modules/'
 #define colors
@@ -40,6 +40,8 @@ declare -a verlist
 pkgpath=''
 pkgver=''
 pkgcount=0
+copy=false
+testpath='/data/Projects/node_modules/grunt-casper--0.3.10'
 #******************************************Functions********************************************************************
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++setupDirs++++++++++++++++++++++++++++++++++++++++++++++
@@ -279,19 +281,20 @@ setpackage()
 echo -e '\e[1;34m'[279] 'setpackage()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local pkgin=${1}
 if [ "$pkgin" != "" ]; then
-#see if the package ($pkginstall) exists in the local directory
-    #get local package list set currentpaths and currentversions if at least one package is in the list
+#see if the package ($pkgin) exists in the local directory
+    #get local package list set $pkgpath and $pkgver if at least one package is in the list
     getPackageCount ${pkgin}
     if [ ${pkgcount} -gt 0 ]; then
         #set package path
         pkgpath=${currentpaths[0]}
         pkgver=${currentversions[0]}
         if [ ${pkgcount} -lt 2 ]; then
-        echo [290] 'pkgcount='${pkgcount} 'pkgin='${pkgin} 'founde locally' >> ${cwd}/lnpm.log
+        echo [290] 'pkgcount='${pkgcount} 'pkgin='${pkgin} 'found locally' >> ${cwd}/lnpm.log
         fi
         #If more than one version then manage (pkgexists advances one more before exiting loop)
+        #Offer user list to select which version to use and place selection in global $pkgpath and $pkgver
         if [ $pkgcount -gt 1 ]; then
-        echo [294] 'pkgcount='${pkgcount} 'pkgin='${pkgin} 'founde locally' >> ${cwd}/lnpm.log
+        echo [294] 'pkgcount='${pkgcount} 'pkgin='${pkgin} 'found locally' >> ${cwd}/lnpm.log
             options=${currentversions[@]}
             select s in $options; do
             count=0
@@ -307,17 +310,14 @@ if [ "$pkgin" != "" ]; then
         fi
 #not in local directory, download it if it exists in npm registry
     else
-        #echo -e ${yellow}$pkgin 'not found in local directory'
-        #echo -e ${green}'Installing module from npm external repository'${default}
         cd $nd
         npm install $pkgin
         setupDirs
         getPackageCount ${pkgin}
         if [ $pkgcount -gt 0 ]; then
-            #echo -e ${green}$pkgin 'added to local npm storage'${default}
             setpackage ${pkgin}
         else
-            #echo -e ${red}$pkgin 'does not exist in local directory or in npm repository'${default}
+            echo [318] 'Package '${pkgin} 'does not found locally or remotely' >> ${cwd}/lnpm.log
         exit 0
         fi
     fi
@@ -576,7 +576,8 @@ echo [554] 'makeDevList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
 }
 
 getPackageCount(){
-#Checks for versions of pkginstall in the local directory and pkgcount+1 for each version found
+echo -e '\e[1;34m'[580] 'getPackageCount() pkgin='${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
+#Checks for versions of pkgin($1) in the local directory and pkgcount+1 for each version found
 #If there is a match, it also sets currentpaths and currentversions arrays to match directories found
     splitdirnames
     local pkgin=${1}
@@ -605,7 +606,6 @@ convert(){
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
         echo [607] 'vrs='${vrs} >> ${cwd}/lnpm.log
-        exit 0
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
@@ -783,6 +783,7 @@ if [[ ${verstr} =~ $rgx ]]; then
     result=$(exactVersion ${pkgin} ${verstr})
     echo [784] 'result='${result} ''${2} ''${3} >> ${cwd}/lnpm.log
     versionLocal=$(isLocal ${pkgin} ${result})
+    echo [786] 'versionLocal'${versionLocal} ''${2} ''${3} >> ${cwd}/lnpm.log
     if [ ${versionLocal} -eq 1 ]; then
         echo ${result}
         exit 0
@@ -1235,6 +1236,7 @@ echo -e '\e[1;34m'[1240] 'exactVersion()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnp
 local pkg=$1
 local ver=$2
 local loc=$(isLocal ${pkg} ${ver})
+echo [1239] 'loc='${loc} >> ${cwd}/lnpm.log
 if [ ${loc} -lt 1 ]; then
     remoteInstall ${pkg} ${ver}
 fi
@@ -1657,6 +1659,7 @@ local count=0
 local pkg=$1
 local ver=$2
 for pk in ${pkglist[@]}; do
+echo [1662] 'pk='${pk} >> ${cwd}/lnpm.log
     if [ "${pk}" = "${pkg}" ]; then
         if [ "${verlist[${count}]}" = "${ver}" ]; then
             echo 1
@@ -1694,6 +1697,29 @@ else
 fi
 }
 
+copypkg(){
+local pkgin=${1}
+echo -e '\e[1;34m'[1701] 'copypkg() 1='${pkgin} '2='${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
+setpackage ${pkgin}
+echo [1702] 'Selected version='${pkgver} 'path='${pkgpath} >> ${cwd}/lnpm.log
+mkdir ${cwd}/node_modules -p
+
+local nsl=$(find ${cwd}/node_modules/$pkgin -maxdepth 0)
+if [ "${nsl}" != "${cwd}/node_modules/${1}" ]; then
+    echo [1708] 'no sl for '${pkgin} 'copying directory from local' >> ${cwd}/lnpm.log
+    echo [1709] 'pkgpath='${pkgpath} 'cwd='${cwd} 'pkgin='${pkgin} 'pkgver=' ${pkgver} >> ${cwd}/lnpm.log
+    #Must use nd and cwd from the root of script to properly copy because functions execute in their own evironment
+    #Which means that files and directories are out of scope
+    cp ${nd}/${pkgin}--${pkgver} ${cwd}/node_modules/${pkgin} -a -R
+else
+    #remove existing link first or directory, which allows using copy to change versions
+    echo [1708] 'sl for '${pkgin} 'exists, deleting' >> ${cwd}/lnpm.log
+    rm ${cwd}/node_modules/$pkgin -R
+    echo [1713] 'Deleted link, now copying local directory as '${pkgin} >> ${cwd}/lnpm.log
+    echo [1715] 'pkgpath='${pkgpath} 'cwd='${cwd} 'pkgin='${pkgin} 'pkgver=' ${pkgver} >> ${cwd}/lnpm.log
+    cp ${nd}/${pkgin}--${pkgver} ${cwd}/node_modules/${pkgin} -a -R
+fi
+}
 #/////////////////////////////////////////////////SCRIPT START//////////////////////////////////////////////////////////
 #validate input
 #rchek=$(find ${nd})
@@ -1746,13 +1772,16 @@ echo [1753] 'Start Switch 1='${1} '2='${2} '3='${3} >> ${cwd}/lnpm.log
             setNodeDir
             exit 0
         ;;
-        'test')
-            echo $(reasonablyClose $2 $3)
-            exit 0
+        'copy')
+        #In cases where the node package will not accept being a link the package is copied to the project directory
+        #The global var copy is set to true and the normal install proccess is carried out except it will copy insead
+        #of creating a link
+            copy=true
+            copypkg ${2}
         ;;
         *)
             echo -e ${red}'Invalid First Parameter'${default}
-            echo -e ${green}'Valid First Parameters are: install, configure, convert, update, revert and prepdeploy'${default}
+            echo -e ${green}'Valid First Parameters are: install, configure, convert, update, revert and copy'${default}
             exit 0
         ;;
     esac
