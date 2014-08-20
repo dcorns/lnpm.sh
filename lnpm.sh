@@ -317,7 +317,7 @@ if [ "$pkgin" != "" ]; then
         if [ $pkgcount -gt 0 ]; then
             setpackage ${pkgin}
         else
-            echo [318] 'Package '${pkgin} 'does not found locally or remotely' >> ${cwd}/lnpm.log
+            echo [318] 'Package '${pkgin} 'not found locally or remotely' >> ${cwd}/lnpm.log
         exit 0
         fi
     fi
@@ -595,7 +595,7 @@ echo -e '\e[1;34m'[580] 'getPackageCount() pkgin='${1} ''${2} ''${3}'\e[0m' >> $
 }
 
 convert(){
-    echo [587] 'convert()' ${1} >> ${cwd}/lnpm.log
+    echo -e '\e[1;34m'[598] 'convert()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
     parcepkgjson
     makeDepList
     makeDevList
@@ -605,7 +605,7 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
-        echo [607] 'vrs='${vrs} >> ${cwd}/lnpm.log
+        echo [608] 'vrs='${vrs} >> ${cwd}/lnpm.log
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
@@ -1659,7 +1659,6 @@ local count=0
 local pkg=$1
 local ver=$2
 for pk in ${pkglist[@]}; do
-echo [1662] 'pk='${pk} >> ${cwd}/lnpm.log
     if [ "${pk}" = "${pkg}" ]; then
         if [ "${verlist[${count}]}" = "${ver}" ]; then
             echo 1
@@ -1678,6 +1677,7 @@ local ver=$2
 cd ${nd}
 #direct output of npm install to variable to keep it from being returned with echo from this function
 local npmoutput=$(npm install ${pkg}@${ver})
+echo [1680] 'npmoutput='${npmoutput} ''${2} ''${3} >> ${cwd}/lnpm.log
 setupDirs
 setPackageCount ${pkg}
 cd ${cwd}
@@ -1758,6 +1758,7 @@ echo [1753] 'Start Switch 1='${1} '2='${2} '3='${3} >> ${cwd}/lnpm.log
             exit 0
         ;;
         'convert')
+            echo -e ${yellow}'Existing node directories will be replaced with symbolic links to local directory'${default}
             echo -e ${yellow}'Enter yes to continue'${default}
             read
             if [ "$REPLY" != 'yes' ]; then
