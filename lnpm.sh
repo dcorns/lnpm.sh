@@ -18,7 +18,6 @@ blue='\e[1;34m'
 default='\e[0m'
 havedependencies=false
 havedevdependencies=false
-localpackageadded=false
 alreadydep=false
 alreadydev=false
 declare -a depobj
@@ -361,7 +360,7 @@ echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm
 #Check for package in devdependencies
 checkpackageDev(){
 local pkgin=$1
-echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin} 'localpackageadded='${localpackageadded}'\e[0m' >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin} '\e[0m' >> ${cwd}/lnpm.log
         cv=0;
         while (( ${#devlist[@]} > $cv )); do
             if [ $pkgin == ${devlist[$cv]} ]; then
