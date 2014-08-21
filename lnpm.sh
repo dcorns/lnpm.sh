@@ -400,7 +400,7 @@ if [ $havedependencies = true ]; then
         echo $pkgline >> package.njson
         dep=$(echo $pkgline | grep -o 'dependencies')
         if [ "$dep" = 'dependencies' ]; then
-            echo '"'$pkgin'"': '"^'$pkgver'"'"," >> package.njson
+            echo '"'$pkgin'"': '"'$pkgver'"'"," >> package.njson
         fi
     done
 else
@@ -414,7 +414,7 @@ else
                 echo $pkgline',' >> package.njson #add comma to last object
                 depends='"dependencies"'
                 echo $depends': {' >> package.njson
-                echo '"'$pkgin'"': '"^'$pkgver'"' >> package.njson
+                echo '"'$pkgin'"': '"'$pkgver'"' >> package.njson
                 echo "}" >> package.njson
             else
                 echo $pkgline >> package.njson
@@ -445,7 +445,7 @@ if [ $havedevdependencies = true ]; then
         echo $pkgline >> package.njson
         dep=$(echo $pkgline | grep -o 'devDependencies')
         if [ "$dep" = 'devDependencies' ]; then
-            echo '"'$pkgin'"': '"^'$pkgver'"'"," >> package.njson
+            echo '"'$pkgin'"': '"'$pkgver'"'"," >> package.njson
         fi
     done
 else
@@ -460,7 +460,7 @@ else
             echo $pkgline',' >> package.njson
             depends='"devDependencies"'
             echo $depends': {' >> package.njson
-            echo '"'$pkgin'"': '"^'$pkgver'"' >> package.njson
+            echo '"'$pkgin'"': '"'$pkgver'"' >> package.njson
             echo "}" >> package.njson
         else
             echo $pkgline >> package.njson
