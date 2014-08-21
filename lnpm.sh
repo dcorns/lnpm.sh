@@ -1801,7 +1801,9 @@ echo -e '\e[1;34m'[1730] 'Swtich Statement Begins 1='${1}'\e[0m' >> ${cwd}/lnpm.
         #The global var copy is set to true and the normal install proccess is carried out except it will copy insead
         #of creating a link
             copy=true
-            copypkg ${2}
+            for cpkg in ${params[@]}; do
+            copypkg ${cpkg}
+            done
         ;;
         *)
             echo -e ${red}'Invalid First Parameter'${default}
