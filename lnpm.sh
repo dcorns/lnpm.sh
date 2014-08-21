@@ -34,9 +34,12 @@ pkginstall=$2
 declare -a currentpaths
 declare -a currentversions
 devinstall=$3
+modparam=''
 declare -a pkgpaths
 declare -a pkglist
 declare -a verlist
+declare -a params
+declare -i count
 pkgpath=''
 pkgver=''
 pkgcount=0
@@ -212,9 +215,10 @@ exit 0
 #++++++++++++++++++++++++++++++++++++++++++++++++++++install++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #*************************************lnpm install code*****************************************************************
 install(){
-echo [218] 'install()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+local pkgin=${1}
+echo [218] 'install() pkgin='${pkgin} >> ${cwd}/lnpm.log
 #Check for package locally, else install from repo and setup the directory, else error invalid package
-setpackage ${pkginstall}
+setpackage ${pkgin}
 #verify or create package.json file
 checkpackagejson
 #parce package.json and set flags for proccessing
@@ -223,36 +227,34 @@ parcepkgjson
 makeDepList
 makeDevList
 #if not already in package.json dependencies object, add it
-checkpackageDep
-checkpackageDev
+checkpackageDep ${pkgin}
+checkpackageDev ${pkgin}
 
 
-if [ "$devinstall" = "-dev" ] || [ "$devinstall" = "--save-dev" ]; then
+if [ "$modparam" = "--save-dev" ]; then
     if [ $alreadydev = false ]; then
-        echo -e ${green}'adding' $pkginstall 'version' $pkgver "to package.json devdependencies"${default}
-        addpackageDev
+        echo -e ${green}'adding' ${pkgin} 'version' ${pkgver} "to package.json devdependencies"${default}
+        addpackageDev ${pkgin}
     fi
 fi
 
-if [ "$devinstall" = "--save" ] || [ "$devinstall" = "" ] || [ "$devinstall" = "--save-dev" ]; then
+if [ "$modparam" = "--save" ] || [ "$modparam" = "" ]; then
     if [ $alreadydep = false ]; then
-    echo -e ${green}'adding' $pkginstall 'version' $pkgver "to package.json dependencies"${default}
-    addpackageDep
+    echo -e ${green}'adding' ${pkgin} 'version' ${pkgver} "to package.json dependencies"${default}
+    addpackageDep ${pkgin}
     fi
 fi
-echo -e ${green}'Installation complete'${default}
 }
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++check3++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #validate the third parameter devinstall
 check3(){
 echo [247] 'check3() devinstall='${devinstall} >> ${cwd}/lnpm.log
-case $devinstall in
-    '-dev') ;;
+case $modparam in
     '--save-dev') ;;
     '--save') ;;
     '') ;;
-    *) echo -e ${red}'The third parameter must be -dev, --save, --save-dev or null'${default}
+    *) echo -e ${red}'Valid options are --save, --save-dev'${default}
        exit 0
        ;;
 esac
@@ -331,27 +333,26 @@ fi
 checkpackagejson()
 {
 #check for package.json and npm init if it does not exist
-echo [338] 'checkpackagejson()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[337] 'checkpackagejson()''\e[0m' >> ${cwd}/lnpm.log
 cd $cwd
-pkg=$(find package.json)
-if [ "$pkg" = 'package.json' ]; then
-    echo -e ${green}"Found package.json"${default}
-else
-npm init
+local pkg=$(find package.json)
+if [ "$pkg" != 'package.json' ]; then
+    npm init
 fi
 }
 #Check for package in dependencies
 checkpackageDep(){
-echo [349] 'checkpackageDep()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+local pkgin=${1}
+echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 if [ $localpackageadded = true ]; then
         echo "New package added, bypass package.json dependencies check"
     else
         p=0;
         while (( ${#deplist[@]} > $p )); do
-            if [ $pkginstall = ${deplist[$p]} ]; then
+            if [ $pkgin = ${deplist[$p]} ]; then
                 alreadydep=true
                 if [ $pkgver = ${depverlist[$p]} ]; then
-                echo -e ${yellow}$pkginstall $pkgver is already in package.json dependencies object${default}
+                echo -e ${yellow}$pkgin $pkgver is already in package.json dependencies object${default}
                 else
                 echo -e ${yellow}'Another version ('${depverlist[p]}') of' ${deplist[p]} 'is already in package.json!'${default}
                 exit 0
@@ -363,16 +364,17 @@ if [ $localpackageadded = true ]; then
 }
 #Check for package in devdependencies
 checkpackageDev(){
-echo [370] 'checkpackageDev()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+local pkgin=$1
+echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 if [ $localpackageadded = true ]; then
         echo "New package added, bypass package.json devdependencies check"
     else
         cv=0;
         while (( ${#devlist[@]} > $cv )); do
-            if [ $pkginstall == ${devlist[$cv]} ]; then
+            if [ $pkgin == ${devlist[$cv]} ]; then
                 if [ $pkgver == ${devverlist[$cv]} ]; then
                 alreadydev=true
-                echo -e ${yellow}$pkginstall $pkgver is already in package.json devDependencies object${default}
+                echo -e ${yellow}$pkgin $pkgver is already in package.json devDependencies object${default}
                 else
                 echo -e ${yellow}'Another version ('${depverlist[p]}') of' ${deplist[p]} 'is already in package.json!'${default}
                 exit 0
@@ -383,8 +385,9 @@ if [ $localpackageadded = true ]; then
     fi
 }
 addpackageDep(){
+local pkgin=${1}
 #extract package.json lines to array
-echo [391] 'addpackageDep()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[390] 'addpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 cd $cwd
 #make temp package.json file
@@ -396,7 +399,7 @@ if [ $havedependencies = true ]; then
         echo $pkgline >> package.njson
         dep=$(echo $pkgline | grep -o 'dependencies')
         if [ "$dep" = 'dependencies' ]; then
-            echo '"'$pkginstall'"': '"'$pkgver'"'"," >> package.njson
+            echo '"'$pkgin'"': '"'$pkgver'"'"," >> package.njson
         fi
     done
 else
@@ -410,7 +413,7 @@ else
                 echo $pkgline',' >> package.njson #add comma to last object
                 depends='"dependencies"'
                 echo $depends': {' >> package.njson
-                echo '"'$pkginstall'"': '"'$pkgver'"' >> package.njson
+                echo '"'$pkgin'"': '"'$pkgver'"' >> package.njson
                 echo "}" >> package.njson
             else
                 echo $pkgline >> package.njson
@@ -419,13 +422,14 @@ else
     done
 fi
 writepackagejson
-writelink ${pkginstall} ${pkgver}
-echo -e ${green}$pkginstall $pkgver 'added to package.json dependencies'${default}
+writelink ${pkgin} ${pkgver}
+echo -e ${green}$pkgin $pkgver 'added to package.json dependencies'${default}
 }
 
 addpackageDev(){
+local pkgin=${1}
 #extract package.json lines to array
-echo [431] 'addpackageDev()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[430] 'addpackageDev() pkgin='${pkgin} >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 cd $cwd
 #make temp package.json file
@@ -437,7 +441,7 @@ if [ $havedevdependencies = true ]; then
         echo $pkgline >> package.njson
         dep=$(echo $pkgline | grep -o 'devDependencies')
         if [ "$dep" = 'devDependencies' ]; then
-            echo '"'$pkginstall'"':'"'$pkgver'"'"," >> package.njson
+            echo '"'$pkgin'"':'"'$pkgver'"'"," >> package.njson
         fi
     done
 else
@@ -453,7 +457,7 @@ else
             echo $pkgline',' >> package.njson
             depends='"devDependencies"'
             echo $depends': {' >> package.njson
-            echo '"'$pkginstall'"':'"'$pkgver'"' >> package.njson
+            echo '"'$pkgin'"':'"'$pkgver'"' >> package.njson
             echo "}" >> package.njson
         else
             echo $pkgline >> package.njson
@@ -463,8 +467,8 @@ else
 fi
 #replace package.json with modified
 writepackagejson
-writelink ${pkginstall} ${pkgver}
-echo -e ${green}$pkginstall $pkgver 'added to package.json devdependencies'${default}
+writelink ${pkgin} ${pkgver}
+echo -e ${green}$pkgin $pkgver 'added to package.json devdependencies'${default}
 }
 writepackagejson(){
 rm package.json
@@ -475,7 +479,7 @@ mv package.njson package.json
 #requires pkgjson
 parcepkgjson(){
 #extract package.json lines to array and other stuff that isn't really needed
-echo [478] 'parcepkgjson()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[479] 'parcepkgjson()''\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 count=1
 depstart=false
@@ -521,9 +525,9 @@ devcount=0
     done
 }
 
-#requires depobj, hasdependencies
+#requires depobj, havedependencies
 makeDepList(){
-echo [526] 'makeDepList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[527] 'makeDepList()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
     if [ $havedependencies = true ]; then
         echo -e ${green}'building deplist'${default}
         depobjlength=${#depobj[@]}
@@ -533,10 +537,6 @@ echo [526] 'makeDepList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
             pkgjsondep=${depobj[dpo]}
             #drop everything after package name
             basepkgdep=${pkgjsondep%%':'*}
-            #echo ${basepkgdep}
-            #drop everything before package name
-            #basepkgdep=${basepkgdep##*'/'}
-            #echo ${basepkgdep}
             #drop everything before last version text
             basepkgdepver=${pkgjsondep##*':'}
             #drop the comma if it has one
@@ -549,9 +549,9 @@ echo [526] 'makeDepList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
     fi
 }
 
-#requires devobj, hasdevdependencies
+#requires devobj, havedevdependencies
 makeDevList(){
-echo [554] 'makeDevList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[551] 'makeDevList()''\e[0m' >> ${cwd}/lnpm.log
     if [ $havedevdependencies = true ]; then
         echo -e ${green}'building devlist'${default}
         devobjlength=${#devobj[@]}
@@ -561,8 +561,6 @@ echo [554] 'makeDevList()'${1} ''${2} ''${3} >> ${cwd}/lnpm.log
             pkgjsondev=${devobj[dvo]}
             #drop everything after package name
             basepkgdev=${pkgjsondev%%':'*}
-            #drop everything before package name
-            #basepkgdev=${basepkgdev##*'/'}
             #drop everything before last version text
             basepkgdevver=${pkgjsondev##*':'}
             #drop the comma if it has one
@@ -1727,11 +1725,34 @@ fi
     #echo -e ${red}"Node modules directory invalid. Set var nd on line 10 to valid path for local node modules"${default}
     #exit 1
 #else
-echo [1753] 'Start Switch 1='${1} '2='${2} '3='${3} >> ${cwd}/lnpm.log
+#Store all parameters except first (and last if preceeded by a -) in params, first is the command and last is any modifier
+count=1
+echo [1734] 'paramcount'${#} >> ${cwd}/lnpm.log
+for pars in ${*}; do
+echo [1735] 'count='${count} 'First character of pars=' ${pars:0:1} >> ${cwd}/lnpm.log
+    if [ ${count} -gt 1 ]; then
+        if [ ${count} -lt ${#} ];
+        then
+            params+=(${pars})
+        else
+            regx='^-[\w]*'
+            if [[ "${pars}" =~ $regx ]]; then
+                modparam=${pars}
+            else
+                params+=(${pars})
+            fi
+        fi
+    fi
+    let count+=1
+done
+echo [1735] 'params='${params[@]} 'modparam='${modparam} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[1730] 'Swtich Statement Begins 1='${1}'\e[0m' >> ${cwd}/lnpm.log
     case $1 in
         'install')
             check3
-            install
+            for pak in ${params[@]}; do
+            install ${pak}
+            done
             exit 0
         ;;
         'update')
