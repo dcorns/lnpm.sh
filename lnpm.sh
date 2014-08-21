@@ -344,9 +344,6 @@ fi
 checkpackageDep(){
 local pkgin=${1}
 echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
-if [ $localpackageadded = true ]; then
-        echo "New package added, bypass package.json dependencies check"
-    else
         p=0;
         while (( ${#deplist[@]} > $p )); do
             if [ $pkgin = ${deplist[$p]} ]; then
@@ -360,15 +357,11 @@ if [ $localpackageadded = true ]; then
             fi
             let p+=1
         done
-    fi
 }
 #Check for package in devdependencies
 checkpackageDev(){
 local pkgin=$1
 echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin} 'localpackageadded='${localpackageadded}'\e[0m' >> ${cwd}/lnpm.log
-#if [ $localpackageadded = true ]; then
- #       echo "New package added, bypass package.json devdependencies check"
-  #  else
         cv=0;
         while (( ${#devlist[@]} > $cv )); do
             if [ $pkgin == ${devlist[$cv]} ]; then
@@ -382,8 +375,8 @@ echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin} 'localpackageadded='$
             fi
             let cv+=1
         done
-   # fi
 }
+
 addpackageDep(){
 local pkgin=${1}
 local dp=0
