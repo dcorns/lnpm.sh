@@ -226,8 +226,9 @@ parcepkgjson
 makeDepList
 makeDevList
 #if not already in package.json dependencies object, add it
-checkpackageDep ${pkgin}
-checkpackageDev ${pkgin}
+
+checkpackageDep '"'${pkgin}'"'
+checkpackageDev '"'${pkgin}'"'
 
 
 if [ "$modparam" = "--save-dev" ]; then
@@ -342,7 +343,8 @@ fi
 #Check for package in dependencies
 checkpackageDep(){
 local pkgin=${1}
-echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
+alreadydep=false
+echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin} 'deplist[@]='${deplist[@]}'\e[0m' >> ${cwd}/lnpm.log
         p=0;
         while (( ${#deplist[@]} > $p )); do
             if [ $pkgin = ${deplist[$p]} ]; then
@@ -360,6 +362,7 @@ echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm
 #Check for package in devdependencies
 checkpackageDev(){
 local pkgin=$1
+alreadydev=false
 echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin} '\e[0m' >> ${cwd}/lnpm.log
         cv=0;
         while (( ${#devlist[@]} > $cv )); do
@@ -522,7 +525,7 @@ local i=0
 
 #requires depobj, havedependencies
 makeDepList(){
-echo -e '\e[1;34m'[527] 'makeDepList()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[527] 'makeDepList() depobj[@]='${depobj[dpo]} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
     if [ $havedependencies = true ]; then
         echo -e ${green}'building deplist'${default}
         depobjlength=${#depobj[@]}
@@ -1722,6 +1725,7 @@ fi
 #else
 #Store all parameters except first (and last if preceeded by a -) in params, first is the command and last is any modifier
 count=1
+paramcount=${#}
 echo [1734] 'paramcount'${#} >> ${cwd}/lnpm.log
 for pars in ${*}; do
     if [ ${count} -gt 1 ]; then
@@ -1744,7 +1748,7 @@ echo -e '\e[1;34m'[1730] 'Swtich Statement Begins 1='${1}'\e[0m' >> ${cwd}/lnpm.
     case $1 in
         'install')
             check3
-            if [ paramcount -gt 1 ]; then
+            if [ ${paramcount} -gt 1 ]; then
             for pak in ${params[@]}; do
             install ${pak}
             done
