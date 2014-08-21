@@ -1752,9 +1752,13 @@ echo -e '\e[1;34m'[1730] 'Swtich Statement Begins 1='${1}'\e[0m' >> ${cwd}/lnpm.
     case $1 in
         'install')
             check3
+            if [ paramcount -gt 1 ]; then
             for pak in ${params[@]}; do
             install ${pak}
             done
+            else
+            install
+            fi
             exit 0
         ;;
         'update')
