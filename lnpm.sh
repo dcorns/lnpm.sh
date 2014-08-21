@@ -434,7 +434,6 @@ local ad=0
 echo -e '\e[1;34m'[432] 'addpackageDev() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 cd $cwd
-echo [435] 'pkgjson='${pkgjson[@]} >> ${cwd}/lnpm.log
 #make temp package.json file
 touch package.njson
 depends='"devDependencies"'
@@ -469,8 +468,6 @@ else
     done
 fi
 #replace package.json with modified
-echo [468] 'The following is package.njson before write' >> ${cwd}/lnpm.log
-cat package.njson >> ${cwd}/lnpm.log
 writepackagejson
 writelink ${pkgin} ${pkgver}
 echo -e ${green}$pkgin $pkgver 'added to package.json devdependencies'${default}
