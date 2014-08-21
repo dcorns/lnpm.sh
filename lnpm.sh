@@ -33,7 +33,7 @@ cwd=$(pwd)
 pkginstall=$2
 declare -a currentpaths
 declare -a currentversions
-devinstall=$3
+#devinstall=$3
 modparam=''
 declare -a pkgpaths
 declare -a pkglist
@@ -216,7 +216,7 @@ exit 0
 #*************************************lnpm install code*****************************************************************
 install(){
 local pkgin=${1}
-echo [218] 'install() pkgin='${pkgin} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[219] 'install() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 #Check for package locally, else install from repo and setup the directory, else error invalid package
 setpackage ${pkgin}
 #verify or create package.json file
@@ -249,7 +249,7 @@ fi
 #+++++++++++++++++++++++++++++++++++++++++++++++++++check3++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #validate the third parameter devinstall
 check3(){
-echo [247] 'check3() devinstall='${devinstall} >> ${cwd}/lnpm.log
+echo [252] 'check3() modparam='${modparam} >> ${cwd}/lnpm.log
 case $modparam in
     '--save-dev') ;;
     '--save') ;;
@@ -365,10 +365,10 @@ if [ $localpackageadded = true ]; then
 #Check for package in devdependencies
 checkpackageDev(){
 local pkgin=$1
-echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
-if [ $localpackageadded = true ]; then
-        echo "New package added, bypass package.json devdependencies check"
-    else
+echo -e '\e[1;34m'[369] 'checkpackageDev() pkgin='${pkgin} 'localpackageadded='${localpackageadded}'\e[0m' >> ${cwd}/lnpm.log
+#if [ $localpackageadded = true ]; then
+ #       echo "New package added, bypass package.json devdependencies check"
+  #  else
         cv=0;
         while (( ${#devlist[@]} > $cv )); do
             if [ $pkgin == ${devlist[$cv]} ]; then
@@ -382,10 +382,11 @@ if [ $localpackageadded = true ]; then
             fi
             let cv+=1
         done
-    fi
+   # fi
 }
 addpackageDep(){
 local pkgin=${1}
+local dp=0
 #extract package.json lines to array
 echo -e '\e[1;34m'[390] 'addpackageDep() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
@@ -399,7 +400,7 @@ if [ $havedependencies = true ]; then
         echo $pkgline >> package.njson
         dep=$(echo $pkgline | grep -o 'dependencies')
         if [ "$dep" = 'dependencies' ]; then
-            echo '"'$pkgin'"': '"'$pkgver'"'"," >> package.njson
+            echo '"'$pkgin'"': '"^'$pkgver'"'"," >> package.njson
         fi
     done
 else
@@ -413,7 +414,7 @@ else
                 echo $pkgline',' >> package.njson #add comma to last object
                 depends='"dependencies"'
                 echo $depends': {' >> package.njson
-                echo '"'$pkgin'"': '"'$pkgver'"' >> package.njson
+                echo '"'$pkgin'"': '"^'$pkgver'"' >> package.njson
                 echo "}" >> package.njson
             else
                 echo $pkgline >> package.njson
@@ -428,20 +429,23 @@ echo -e ${green}$pkgin $pkgver 'added to package.json dependencies'${default}
 
 addpackageDev(){
 local pkgin=${1}
+local ad=0
 #extract package.json lines to array
-echo -e '\e[1;34m'[430] 'addpackageDev() pkgin='${pkgin} >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[432] 'addpackageDev() pkgin='${pkgin}'\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 cd $cwd
+echo [435] 'pkgjson='${pkgjson[@]} >> ${cwd}/lnpm.log
 #make temp package.json file
 touch package.njson
 depends='"devDependencies"'
+echo [439] 'havedevdependencies='${havedevdependencies} >> ${cwd}/lnpm.log
 if [ $havedevdependencies = true ]; then
     while (( ${#pkgjson[@]} > ad )); do
         pkgline=${pkgjson[ad++]}
         echo $pkgline >> package.njson
         dep=$(echo $pkgline | grep -o 'devDependencies')
         if [ "$dep" = 'devDependencies' ]; then
-            echo '"'$pkgin'"':'"'$pkgver'"'"," >> package.njson
+            echo '"'$pkgin'"': '"^'$pkgver'"'"," >> package.njson
         fi
     done
 else
@@ -450,14 +454,13 @@ else
     count=1
     while (( ${#pkgjson[@]} > ad )); do
         pkgline=${pkgjson[ad++]}
-
         dep=$(echo $pkgline | grep -o 'devDependencies')
         #if the result is invalid the if statement will generate error however program still executes as expected
         if [ $size = $count ]; then
             echo $pkgline',' >> package.njson
             depends='"devDependencies"'
             echo $depends': {' >> package.njson
-            echo '"'$pkgin'"':'"'$pkgver'"' >> package.njson
+            echo '"'$pkgin'"': '"^'$pkgver'"' >> package.njson
             echo "}" >> package.njson
         else
             echo $pkgline >> package.njson
@@ -466,11 +469,14 @@ else
     done
 fi
 #replace package.json with modified
+echo [468] 'The following is package.njson before write' >> ${cwd}/lnpm.log
+cat package.njson >> ${cwd}/lnpm.log
 writepackagejson
 writelink ${pkgin} ${pkgver}
 echo -e ${green}$pkgin $pkgver 'added to package.json devdependencies'${default}
 }
 writepackagejson(){
+echo -e '\e[1;34m'[474] 'writepackagejson()''\e[0m' >> ${cwd}/lnpm.log
 rm package.json
 mv package.njson package.json
 }
@@ -479,14 +485,14 @@ mv package.njson package.json
 #requires pkgjson
 parcepkgjson(){
 #extract package.json lines to array and other stuff that isn't really needed
-echo -e '\e[1;34m'[479] 'parcepkgjson()''\e[0m' >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[483] 'parcepkgjson()''\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 count=1
 depstart=false
 devstart=false
 depcount=0
 devcount=0
-#echo -e ${green}'Reading package.json'${default}
+local i=0
     while (( ${#pkgjson[@]} > i )); do
         pkgline=${pkgjson[i++]}
         testforDep=$(echo $pkgline | grep -o 'dependencies')
@@ -1729,7 +1735,6 @@ fi
 count=1
 echo [1734] 'paramcount'${#} >> ${cwd}/lnpm.log
 for pars in ${*}; do
-echo [1735] 'count='${count} 'First character of pars=' ${pars:0:1} >> ${cwd}/lnpm.log
     if [ ${count} -gt 1 ]; then
         if [ ${count} -lt ${#} ];
         then
