@@ -13,7 +13,7 @@ nd=$(echo $LNPMDIR)
 #define colors
 red='\e[0;31m'
 green='\e[0;32m'
-yellow='\e[1;33m'
+yellow='\e[0;93m'
 blue='\e[1;34m'
 default='\e[0m'
 havedependencies=false
@@ -227,7 +227,7 @@ makeDepList
 makeDevList
 #if not already in package.json dependencies object, add it
 
-checkpackageDep '"'${pkgin}'"'
+checkpackageDep '"'${pkgin}'"' '"'${pkgver}'"'
 checkpackageDev '"'${pkgin}'"'
 
 
@@ -280,8 +280,8 @@ done
 
 setpackage()
 {
-echo -e '\e[1;34m'[279] 'setpackage()'${1} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 local pkgin=${1}
+echo -e '\e[1;34m'[279] 'setpackage() pkgin='${pkgin} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
 if [ "$pkgin" != "" ]; then
 #see if the package ($pkgin) exists in the local directory
     #get local package list set $pkgpath and $pkgver if at least one package is in the list
@@ -343,14 +343,15 @@ fi
 #Check for package in dependencies
 checkpackageDep(){
 local pkgin=${1}
+local pkgVin=${2}
 alreadydep=false
-echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin} 'deplist[@]='${deplist[@]}'\e[0m' >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin} 'pkgVin='${pkgVin} 'deplist[@]='${deplist[@]}'\e[0m' >> ${cwd}/lnpm.log
         p=0;
         while (( ${#deplist[@]} > $p )); do
             if [ $pkgin = ${deplist[$p]} ]; then
                 alreadydep=true
-                if [ $pkgver = ${depverlist[$p]} ]; then
-                echo -e ${yellow}$pkgin $pkgver is already in package.json dependencies object${default}
+                if [ $pkgVin = ${depverlist[$p]} ]; then
+                echo -e ${yellow}$pkgin $pkgVin is already in package.json dependencies object${default}
                 else
                 echo -e ${yellow}'Another version ('${depverlist[p]}') of' ${deplist[p]} 'is already in package.json!'${default}
                 exit 0
@@ -601,7 +602,7 @@ convert(){
     for dep in ${deplist[@]}; do
         #check for version in local node storage
         vrs=$(setVersion ${dep} ${depverlist[${count}]})
-        echo [608] 'vrs='${vrs} >> ${cwd}/lnpm.log
+        echo [604] 'vrs='${vrs} >> ${cwd}/lnpm.log
         #if the version exists create sym link
         if [ ${#vrs} -lt 2 ]; then
             echo -e ${red}"Invalid dependency setting in package.json:" ${dep} ${depverlist[${count}]}${default}
