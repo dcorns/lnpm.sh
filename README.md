@@ -6,7 +6,7 @@ This script solves the problem of having node_modules installed in every directo
 
 BEFORE USING lnpm.sh YOU MUST ADD THE FOLLOWING STATEMENT TO ~/.bashrc: export LNPMDIR=<THE FULL PATH OF THE LOCAL DIRECTORY YOU WILL USE TO STORE THE NODE PACKAGES>
 
-After that is done, the easiest way to get started is to copy and existing node_modules directory from one of your existing projects to where you want your centralized location. Then run lnpm configure. This will change all the directory names to <packagename>---<version>. This makes the packages usable with lnpm and your ready to go. You could simply create an empty directory and assign it to nd, but this way will save you some downloading which is one of the main reasons to use this script. You can easily add other packages to the nd directory at anytime and run lnpm configure again to setup the new directories.
+After that is done, the easiest way to get started is to copy and existing node_modules directory from one of your existing projects to where you want your centralized location. Then run lnpm configure. This will change all the directory names to <packagename>---<version>. This makes the packages usable with lnpm and your ready to go. You could simply create an empty directory and assign it to nd, but this way will save you some downloading which is one of the main reasons to use this script. If you find some other package directories later that your want to add, you can easily copy to the nd directory and run lnpm configure again to setup them up.
 
 lnpm.sh install <package name>
 Searches the local directory for the package and if it exist it will do the following as needed:
@@ -29,7 +29,7 @@ install - Will install based on existing package json. If no package.json exists
 <package_name> --save-dev -Installs the package and adds it to package.json as a dependency and devdependency, creating the package.json interactively first if needed.
 
 configure
-Makes an existing node_modules directory compatible with lnpm.sh by renaming the directories to include versions. (<package_name>--<ver>)
+Makes an existing node_modules directory compatible with lnpm.sh by renaming the directories to include versions. (<package_name>--<ver>) You can run this from any directory. It always works on the directory designated for for lnpm. You can also copy unprepared npm directories into this folder and run lnpm configure to conform them.
 
 update [<package_name>]
 Without a package name this will add the latest version of all packages not already stored in the local folder. If a package name is provided only that package will be affected. Note that with lnpm, packages are not replaced with update. The latest version is only added to the the local folder as an option.

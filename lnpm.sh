@@ -344,9 +344,17 @@ fi
 checkpackageDep(){
 local pkgin=${1}
 local pkgVin=${2}
+local choice=0
 alreadydep=false
 echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin} 'pkgVin='${pkgVin} 'deplist[@]='${deplist[@]}'\e[0m' >> ${cwd}/lnpm.log
         p=0;
+        if [ ${#deplist[@]} -gt 1 ]; then
+        #cant use deplist count here as it has all deps, not just the selected one
+        echo [351] 'delpist count='${#deplist[@]} >> ${cwd}/lnpm.log
+        choice=$(selectionList ${deplist})
+        echo [354] 'choice='${choice} >> ${cwd}/lnpm.log
+        exit 0
+        fi
         while (( ${#deplist[@]} > $p )); do
             if [ $pkgin = ${deplist[$p]} ]; then
                 alreadydep=true
@@ -1717,6 +1725,19 @@ else
     cp ${nd}/${pkgin}--${pkgver} ${cwd}/node_modules/${pkgin} -a -R
 fi
 }
+
+selectionList(){
+#${1} is a ${array}
+options=${1}
+echo -e '\e[1;34m'[1724] 'selectionList() options='${options[@]}'\e[0m' >> ${cwd}/lnpm.log
+            select selection in ${options}; do
+            count=0
+            echo ${selection}
+            echo [1728] 'selection='${selection} ''${2} ''${3} >> ${cwd}/lnpm.log
+            break
+            done
+}
+
 #/////////////////////////////////////////////////SCRIPT START//////////////////////////////////////////////////////////
 #validate input
 #rchek=$(find ${nd})
