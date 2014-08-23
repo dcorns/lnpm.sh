@@ -345,15 +345,15 @@ local pkgin=${1}
 local pkgVin=${2}
 local choice=0
 alreadydep=false
-echo -e '\e[1;34m'[346] 'checkpackageDep() pkgin='${pkgin} 'pkgVin='${pkgVin} 'deplist[@]='${deplist[@]}'\e[0m' >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[348] 'checkpackageDep() pkgin='${pkgin} 'pkgVin='${pkgVin} 'deplist[@]='${deplist[@]}'\e[0m' >> ${cwd}/lnpm.log
         p=0;
-        if [ ${#deplist[@]} -gt 1 ]; then
+        #if [ ${#deplist[@]} -gt 1 ]; then
         #cant use deplist count here as it has all deps, not just the selected one
-        echo [351] 'delpist count='${#deplist[@]} >> ${cwd}/lnpm.log
-        choice=$(selectionList ${deplist})
-        echo [354] 'choice='${choice} >> ${cwd}/lnpm.log
-        exit 0
-        fi
+        #echo [351] 'delpist count='${#deplist[@]} >> ${cwd}/lnpm.log
+        #choice=$(selectionList ${deplist})
+        #echo [354] 'choice='${choice} >> ${cwd}/lnpm.log
+        #exit 0
+        #fi
         while (( ${#deplist[@]} > $p )); do
             if [ $pkgin = ${deplist[$p]} ]; then
                 alreadydep=true
@@ -488,11 +488,12 @@ parcepkgjson(){
 echo -e '\e[1;34m'[483] 'parcepkgjson()''\e[0m' >> ${cwd}/lnpm.log
 readarray -t pkgjson < package.json
 count=1
-depstart=false
-devstart=false
-depcount=0
-devcount=0
+local depstart=false
+local devstart=false
+local depcount=0
+local devcount=0
 local i=0
+local pkgline=""
     while (( ${#pkgjson[@]} > i )); do
         pkgline=${pkgjson[i++]}
         testforDep=$(echo $pkgline | grep -o 'dependencies')
@@ -533,7 +534,7 @@ local i=0
 
 #requires depobj, havedependencies
 makeDepList(){
-echo -e '\e[1;34m'[527] 'makeDepList() depobj[@]='${depobj[dpo]} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
+echo -e '\e[1;34m'[536] 'makeDepList() depobj[@]='${depobj[@]} ''${2} ''${3}'\e[0m' >> ${cwd}/lnpm.log
     if [ $havedependencies = true ]; then
         echo -e ${green}'building deplist'${default}
         depobjlength=${#depobj[@]}
