@@ -5,7 +5,6 @@
 #Please report any bugs https://github.com/dcorns/bash_scripts/issues
 echo lnpm started > lnpm.log
 date >> lnpm.log
-clear
 #*******************************************Variables*******************************************************************
 #set the local node modules directory here/usr/bin/env
 nd=$(echo $LNPMDIR)
